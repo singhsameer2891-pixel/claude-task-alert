@@ -1,0 +1,28 @@
+{
+  "name": "claude-task-alert",
+  "version": "1.0.0",
+  "description": "Get Slack notifications when Claude Code needs your attention",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "claude-task-alert": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@clack/prompts": "^1.1.0",
+    "open": "^11.0.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^6.0.2"
+  }
+}
