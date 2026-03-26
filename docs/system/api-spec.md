@@ -86,19 +86,28 @@ Reason: end_turn
 
 Known values: `end_turn`, `max_tokens`, `tool_error`, `permission_denied`.
 
+The hook script also extracts `cwd` from the JSON payload for use in detailed-style messages.
+
 ---
 
 ## 4. Claude Code settings.json Hook Entry
 
-**Location:** Platform-dependent (see `src/claude-code.ts`)
+**Location:** Platform-dependent (see `src/integration.ts`)
+- macOS / Linux: `~/.claude/settings.json`
+- Windows: `%APPDATA%/claude/settings.json`
 
 ```json
 {
   "hooks": {
-    "stop": [
+    "Stop": [
       {
-        "command": "~/.claude-task-alert/hook.sh",
-        "timeout": 10000
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/<user>/.claude-task-alert/hook.sh",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }

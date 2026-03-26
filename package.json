@@ -1,7 +1,7 @@
 {
   "name": "claude-task-alert",
   "version": "1.0.0",
-  "description": "Get Slack notifications when Claude Code needs your attention",
+  "description": "Get Slack notifications when Claude Code stops and needs your attention — zero-config Slack app setup via interactive CLI",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -17,7 +17,32 @@
   "engines": {
     "node": ">=18"
   },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "slack",
+    "notifications",
+    "alerts",
+    "cli",
+    "hooks",
+    "developer-tools",
+    "productivity"
+  ],
+  "author": "singhsameer2891-pixel",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/singhsameer2891-pixel/claude-task-alert.git"
+  },
+  "bugs": {
+    "url": "https://github.com/singhsameer2891-pixel/claude-task-alert/issues"
+  },
+  "homepage": "https://github.com/singhsameer2891-pixel/claude-task-alert#readme",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "dependencies": {
     "@clack/prompts": "^1.1.0",
     "open": "^11.0.0",

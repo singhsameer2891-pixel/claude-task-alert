@@ -139,15 +139,15 @@
 
 ---
 
-## GROUP 10: Publish
+## GROUP 10: Publish ✅
 **Depends on:** GROUP 9
 **Summary:** Prepare for npm publish — metadata, license, architecture doc, final validation.
 
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
-| 10.1 | package.json: description, keywords, repository, author, license fields | ⏳ | |
-| 10.2 | Add LICENSE file (MIT) | ⏳ | |
-| 10.3 | architecture.md — system diagram (Mermaid), component map, data flow | ⏳ | |
-| 10.4 | docs/system/api-spec.md — config schema, hook JSON format, manifest spec | ⏳ | |
-| 10.5 | `npm pack` dry run — verify included files, no secrets | ⏳ | |
-| 10.6 | Final `npx .` smoke test on clean machine / fresh dir | ⏳ | |
+| 10.1 | package.json: description, keywords, repository, author, license fields | ✅ | Added keywords, author, repo, bugs, homepage, files |
+| 10.2 | Add LICENSE file (MIT) | ✅ | |
+| 10.3 | architecture.md — system diagram (Mermaid), component map, data flow | ✅ | Updated stale file refs to match actual src/ |
+| 10.4 | docs/system/api-spec.md — config schema, hook JSON format, manifest spec | ✅ | Updated hook entry format to match actual code |
+| 10.5 | `npm pack` dry run — verify included files, no secrets | ✅ | 31 files, 22.8kB packed, clean |
+| 10.6 | Final `npx .` smoke test on clean machine / fresh dir | ✅ | Boots, shows welcome + first prompt, 34/34 tests pass |

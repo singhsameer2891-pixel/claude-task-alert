@@ -50,15 +50,13 @@ flowchart LR
 
 | Component | File | Role |
 |---|---|---|
-| Entry point | `src/index.ts` | CLI bin entry, state detection, flow routing |
-| Config manager | `src/config.ts` | Read/write/validate `config.json`, detect state |
-| Setup flow | `src/setup.ts` | First-run interactive prompts + orchestration |
-| Preferences | `src/preferences.ts` | Channel, threshold, sound, style prompts |
-| Slack connector | `src/slack.ts` | Manifest generation, browser open, webhook validation |
-| Hook generator | `src/hook.ts` | OS detection, hook.sh template generation |
-| Claude Code integration | `src/claude-code.ts` | settings.json read/write, hook registration |
-| Management menu | `src/manage.ts` | Re-run menu: update, change, test, uninstall |
-| OS utilities | `src/os.ts` | Platform detection, idle/sound command resolution |
+| Entry point | `src/index.ts` | CLI bin entry, state detection, flow routing, SIGINT handler, top-level error handler |
+| Config manager | `src/config.ts` | Config type definitions, read/write `config.json`, `detectState()`, write-access check |
+| Setup flow | `src/setup.ts` | First-run interactive prompts (channel, threshold, sound, style). Returns `SetupResult` |
+| Slack connector | `src/slack.ts` | Manifest generation, browser handoff, webhook paste + validation, test POST with retry loop |
+| Hook generator | `src/hook.ts` | OS/platform detection, idle/sound command resolution, `hook.sh` template generation + writer |
+| Claude Code integration | `src/integration.ts` | settings.json read/write, hook registration/dedup, final config write, success screen |
+| Management menu | `src/menu.ts` | Re-run menu: update prefs, change Slack, test alert, uninstall |
 
 ---
 
