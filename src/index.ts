@@ -6,6 +6,7 @@ import { detectState, readConfig } from './config.js';
 import { runFirstRunSetup } from './setup.js';
 import { runSlackConnection } from './slack.js';
 import { runIntegration } from './integration.js';
+import { runManagementMenu } from './menu.js';
 
 async function main() {
   p.intro(pc.bgCyan(pc.black(' Claude Task Alert ')));
@@ -36,8 +37,7 @@ async function main() {
     }
 
     case 'configured': {
-      // Re-run management menu (GROUP 7)
-      p.log.info('Already configured. Management menu coming soon.');
+      await runManagementMenu();
       p.outro('Done.');
       break;
     }

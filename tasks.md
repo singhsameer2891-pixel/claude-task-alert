@@ -94,18 +94,18 @@
 
 ---
 
-## GROUP 7: Re-Run Management Menu
+## GROUP 7: Re-Run Management Menu ✅
 **Depends on:** GROUP 6
 **Summary:** Build the "already configured" menu with update preferences, change webhook, test alert, and uninstall flows.
 
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
-| 7.1 | "Already configured" screen showing current config summary (PRD §10.5) | ⏳ | |
-| 7.2 | "Update preferences" flow — re-prompt threshold, sound, style, write to config | ⏳ | |
-| 7.3 | "Change Slack channel / webhook" flow — re-run browser handoff (GROUP 4 logic) | ⏳ | |
-| 7.4 | "Test alert" action — fire a test Slack notification + sound | ⏳ | |
-| 7.5 | "Uninstall" action — remove hook from settings.json, delete `~/.claude-task-alert/`, confirm | ⏳ | |
-| 7.6 | "Exit" action — clean exit | ⏳ | |
+| 7.1 | "Already configured" screen showing current config summary (PRD §10.5) | ✅ | displayConfigSummary() in src/menu.ts |
+| 7.2 | "Update preferences" flow — re-prompt threshold, sound, style, write to config | ✅ | Regenerates hook.sh with new prefs |
+| 7.3 | "Change Slack channel / webhook" flow — re-run browser handoff (GROUP 4 logic) | ✅ | Reuses runSlackConnection() |
+| 7.4 | "Test alert" action — fire a test Slack notification + sound | ✅ | POST + platform sound via child_process |
+| 7.5 | "Uninstall" action — remove hook from settings.json, delete `~/.claude-task-alert/`, confirm | ✅ | Cleans up settings.json + rm config dir |
+| 7.6 | "Exit" action — clean exit | ✅ | Returns from menu loop |
 
 ---
 
