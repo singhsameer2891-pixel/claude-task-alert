@@ -65,11 +65,30 @@ This removes the hook from Claude Code settings and deletes `~/.claude-task-aler
 
 To also remove the Slack app: go to [Slack App Management](https://api.slack.com/apps) and delete "Claude Task Alert".
 
+## Configuration
+
+All config is stored at `~/.claude-task-alert/`:
+
+| File | Purpose |
+|---|---|
+| `config.json` | Preferences, webhook URL, hook status |
+| `hook.sh` | Generated shell script registered with Claude Code |
+
 ## Requirements
 
 - Node.js >= 18
 - Claude Code installed
 - Slack workspace where you can create apps
+
+## Development
+
+```bash
+git clone https://github.com/singhsameer2891-pixel/claude-task-alert.git
+cd claude-task-alert
+npm install
+npm run build
+npm test
+```
 
 ## License
 

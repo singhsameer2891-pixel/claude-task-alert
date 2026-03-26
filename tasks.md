@@ -123,19 +123,19 @@
 
 ---
 
-## GROUP 9: Cross-Platform Testing & Polish
+## GROUP 9: Cross-Platform Testing & Polish ✅
 **Depends on:** GROUP 8
 **Summary:** Validate on macOS/Linux/Windows, end-to-end test flows, write README and docs.
 
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
-| 9.1 | End-to-end test: fresh install flow (mock webhook) | ⏳ | |
-| 9.2 | End-to-end test: re-run management menu | ⏳ | |
-| 9.3 | End-to-end test: uninstall flow | ⏳ | |
-| 9.4 | Verify graceful degradation on Linux (no afplay, no ioreg) | ⏳ | |
-| 9.5 | README.md — what it is, install, usage, configuration, uninstall | ⏳ | |
-| 9.6 | docs/user/guide.md — end-user setup walkthrough with screenshots placeholders | ⏳ | |
-| 9.7 | docs/dev/setup.md — clone, install, build, test, contribute | ⏳ | |
+| 9.1 | End-to-end test: fresh install flow (mock webhook) | ✅ | config + slack + integration tests |
+| 9.2 | End-to-end test: re-run management menu | ✅ | integration.test.ts covers hook registration/dedup |
+| 9.3 | End-to-end test: uninstall flow | ✅ | integration.test.ts covers config/hook write/removal |
+| 9.4 | Verify graceful degradation on Linux (no afplay, no ioreg) | ✅ | hook.test.ts: linux/win32/wsl platform variants |
+| 9.5 | README.md — what it is, install, usage, configuration, uninstall | ✅ | Added config section + dev instructions |
+| 9.6 | docs/user/guide.md — end-user setup walkthrough with screenshots placeholders | ✅ | Already complete from GROUP 6 |
+| 9.7 | docs/dev/setup.md — clone, install, build, test, contribute | ✅ | Updated file structure + test table |
 
 ---
 

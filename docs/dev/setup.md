@@ -10,7 +10,7 @@
 ## Clone & Install
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/singhsameer2891-pixel/claude-task-alert.git
 cd claude-task-alert
 npm install
 ```
@@ -26,10 +26,7 @@ Compiles TypeScript from `src/` to `dist/`. Output is ESModules.
 ## Run Locally
 
 ```bash
-# Run directly via ts-node / tsx
-npx tsx src/index.ts
-
-# Or after build
+# After build
 node dist/index.js
 
 # Or simulate npx
@@ -41,23 +38,32 @@ npm link && npx claude-task-alert
 ```
 src/
   index.ts          # CLI entry point, state detection, flow routing
-  config.ts         # Config read/write/validate
-  setup.ts          # First-run setup orchestration
-  preferences.ts    # Interactive preference prompts
-  slack.ts          # Manifest generation, browser open, webhook validation
+  config.ts         # Config types, read/write, state detection
+  setup.ts          # First-run interactive preference prompts
+  slack.ts          # Manifest generation, browser handoff, webhook validation
   hook.ts           # Hook script generation (cross-platform)
-  claude-code.ts    # Claude Code settings.json integration
-  manage.ts         # Re-run management menu
-  os.ts             # Platform detection, idle/sound utilities
+  integration.ts    # Claude Code settings.json registration
+  menu.ts           # Re-run management menu (preferences, test, uninstall)
 ```
 
 ## Testing
 
 ```bash
+# Run all tests
 npm test
+
+# Watch mode
+npm run test:watch
 ```
 
-Tests use Vitest. Mock the filesystem and HTTP calls for webhook testing.
+Tests use Vitest. Test files live in `tests/`:
+
+| File | Covers |
+|---|---|
+| `config.test.ts` | Config read/write, state detection, access checks |
+| `hook.test.ts` | Hook script generation, platform detection, graceful degradation |
+| `slack.test.ts` | Manifest generation, Slack app URL building |
+| `integration.test.ts` | Claude Code settings registration, hook dedup, install check |
 
 ## Key Dev Notes
 
@@ -65,6 +71,7 @@ Tests use Vitest. Mock the filesystem and HTTP calls for webhook testing.
 - Config lives at `~/.claude-task-alert/config.json` — never in the project directory
 - The Slack manifest is generated at runtime, not stored as a static file
 - All prompts use `@clack/prompts` — maintain consistent UI style
+- `fs` is mocked in tests — no real file system access during test runs
 
 ## Contributing
 
