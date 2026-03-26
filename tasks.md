@@ -37,28 +37,28 @@
 
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
-| 3.1 | Welcome screen using `@clack/prompts` intro | ⏳ | |
-| 3.2 | Channel name prompt with validation (non-empty, starts with `#`) | ⏳ | |
-| 3.3 | Idle threshold prompt (number input, default 30) | ⏳ | |
-| 3.4 | Sound enable/disable toggle + volume prompt (if enabled) | ⏳ | |
-| 3.5 | Message style select (minimal / detailed) | ⏳ | |
-| 3.6 | Collect all preferences into a `Preferences` object, pass to next step | ⏳ | |
+| 3.1 | Welcome screen using `@clack/prompts` intro | ✅ | p.note with branded welcome |
+| 3.2 | Channel name prompt with validation (non-empty, starts with `#`) | ✅ | Re-prompts on invalid |
+| 3.3 | Idle threshold prompt (number input, default 30) | ✅ | Validates 1–3600 |
+| 3.4 | Sound enable/disable toggle + volume prompt (if enabled) | ✅ | Volume 1–10, skipped if sound off |
+| 3.5 | Message style select (minimal / detailed) | ✅ | @clack/prompts select |
+| 3.6 | Collect all preferences into a `Preferences` object, pass to next step | ✅ | SetupResult type returned |
 
 ---
 
-## GROUP 4: Slack Manifest & Browser Handoff
+## GROUP 4: Slack Manifest & Browser Handoff ✅
 **Depends on:** GROUP 3
 **Summary:** Generate Slack app manifest, open browser for app creation, handle webhook paste + validation + test POST.
 
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
-| 4.1 | Implement `generateManifest()` — returns JSON string per PRD §5 | ⏳ | |
-| 4.2 | Build Slack app creation URL with manifest query param | ⏳ | |
-| 4.3 | Open browser using `open` package, fallback to printing URL manually | ⏳ | |
-| 4.4 | Display step-by-step instructions in CLI (PRD §10.3) while waiting | ⏳ | |
-| 4.5 | Webhook URL paste prompt with format validation (`https://hooks.slack.com/services/...`) | ⏳ | |
-| 4.6 | Test webhook POST — send "Connected!" message, verify 200 response | ⏳ | |
-| 4.7 | On failure: clear error message + re-prompt (loop until valid or user cancels) | ⏳ | |
+| 4.1 | Implement `generateManifest()` — returns JSON string per PRD §5 | ✅ | src/slack.ts |
+| 4.2 | Build Slack app creation URL with manifest query param | ✅ | `buildSlackAppUrl()` with encodeURIComponent |
+| 4.3 | Open browser using `open` package, fallback to printing URL manually | ✅ | try/catch with manual URL fallback |
+| 4.4 | Display step-by-step instructions in CLI (PRD §10.3) while waiting | ✅ | p.note with 8-step guide |
+| 4.5 | Webhook URL paste prompt with format validation (`https://hooks.slack.com/services/...`) | ✅ | Regex validation |
+| 4.6 | Test webhook POST — send "Connected!" message, verify 200 response | ✅ | fetch POST with spinner |
+| 4.7 | On failure: clear error message + re-prompt (loop until valid or user cancels) | ✅ | while(true) loop with retry confirm |
 
 ---
 
