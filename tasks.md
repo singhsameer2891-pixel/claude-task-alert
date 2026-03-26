@@ -24,10 +24,10 @@
 
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
-| 2.1 | Define `Config` TypeScript interface matching PRD §7 schema | ⏳ | |
-| 2.2 | Implement `readConfig()` — reads `~/.claude-task-alert/config.json`, returns null if missing | ⏳ | |
-| 2.3 | Implement `writeConfig(config)` — creates dir if needed, writes JSON | ⏳ | |
-| 2.4 | Implement `detectState()` — returns `fresh` / `configured` / `hook_missing` | ⏳ | |
+| 2.1 | Define `Config` TypeScript interface matching PRD §7 schema | ✅ | |
+| 2.2 | Implement `readConfig()` — reads `~/.claude-task-alert/config.json`, returns null if missing | ✅ | |
+| 2.3 | Implement `writeConfig(config)` — creates dir if needed, writes JSON | ✅ | |
+| 2.4 | Implement `detectState()` — returns `fresh` / `configured` / `hook_missing` | ✅ | |
 
 ---
 
