@@ -62,18 +62,18 @@
 
 ---
 
-## GROUP 5: Hook Script Generation
+## GROUP 5: Hook Script Generation ✅
 **Depends on:** GROUP 4
 **Summary:** Generate the cross-platform hook shell script with OS detection, idle check, sound alert, and Slack POST.
 
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
-| 5.1 | Implement OS detection utility (`darwin` / `linux` / `win32` / `wsl`) | ⏳ | |
-| 5.2 | Generate idle detection command per OS (ioreg / xprintidle / powershell) | ⏳ | |
-| 5.3 | Generate sound playback command per OS (afplay / paplay / powershell SoundPlayer) | ⏳ | |
-| 5.4 | Generate hook.sh template with: stdin JSON parse, idle check, sound, Slack POST, stop reason mapping | ⏳ | |
-| 5.5 | Write hook.sh to `~/.claude-task-alert/hook.sh`, chmod +x | ⏳ | |
-| 5.6 | Graceful degradation: skip sound/idle sections if OS doesn't support, log one-time note | ⏳ | |
+| 5.1 | Implement OS detection utility (`darwin` / `linux` / `win32` / `wsl`) | ✅ | `detectPlatform()` in src/hook.ts |
+| 5.2 | Generate idle detection command per OS (ioreg / xprintidle / powershell) | ✅ | `getIdleDetectionSnippet()` — ioreg/xprintidle/powershell |
+| 5.3 | Generate sound playback command per OS (afplay / paplay / powershell SoundPlayer) | ✅ | `getSoundSnippet()` — afplay/paplay/aplay/powershell |
+| 5.4 | Generate hook.sh template with: stdin JSON parse, idle check, sound, Slack POST, stop reason mapping | ✅ | `generateHookScript()` with full template |
+| 5.5 | Write hook.sh to `~/.claude-task-alert/hook.sh`, chmod +x | ✅ | `writeHookScript()` with mode 0o755 |
+| 5.6 | Graceful degradation: skip sound/idle sections if OS doesn't support, log one-time note | ✅ | `checkPlatformCapabilities()` returns notes |
 
 ---
 
