@@ -10,12 +10,10 @@ function assertNotCancelled(value: unknown): asserts value is Exclude<typeof val
   }
 }
 
-/** Validate channel name: non-empty, starts with # */
+/** Validate channel name: non-empty */
 function validateChannel(value: string | undefined): string | undefined {
   const trimmed = (value ?? '').trim();
   if (!trimmed) return 'Channel name is required.';
-  if (!trimmed.startsWith('#')) return 'Channel name must start with # (e.g. #claude-alerts).';
-  if (trimmed.length < 2) return 'Channel name must have at least one character after #.';
   return undefined;
 }
 
@@ -54,13 +52,14 @@ export async function runFirstRunSetup(): Promise<SetupResult> {
   );
 
   // ── 3.2 Channel name ──
-  const channel = await p.text({
-    message: 'Which Slack channel should alerts go to?',
-    placeholder: '#claude-alerts',
-    defaultValue: '#claude-alerts',
+  const channelRaw = await p.text({
+    message: 'Which Slack channel should alerts go to? (without #)',
+    placeholder: 'claude-alerts',
+    defaultValue: 'claude-alerts',
     validate: validateChannel,
   });
-  assertNotCancelled(channel);
+  assertNotCancelled(channelRaw);
+  const channel = `#${(channelRaw as string).trim().replace(/^#/, '')}`;
 
   // ── 3.3 Idle threshold ──
   const thresholdRaw = await p.text({
@@ -113,7 +112,7 @@ export async function runFirstRunSetup(): Promise<SetupResult> {
   };
 
   return {
-    channel: (channel as string).trim(),
+    channel,
     preferences,
   };
 }

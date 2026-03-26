@@ -46,60 +46,87 @@ function displayConfigSummary(config: Config): void {
 
 // ── 7.2 Update Preferences ──────────────────────────────
 
-async function updatePreferences(config: Config): Promise<void> {
-  p.log.step(pc.bold('Update Preferences'));
+async function updatePreferences(config: Config): Promise<Config> {
+  const prefs = { ...config.preferences };
+  let changed = false;
 
-  const thresholdRaw = await p.text({
-    message: 'Idle threshold (seconds)',
-    placeholder: String(config.preferences.idle_threshold_seconds),
-    defaultValue: String(config.preferences.idle_threshold_seconds),
-    validate(value) {
-      const num = Number((value ?? '').trim());
-      if (isNaN(num) || !Number.isInteger(num) || num < 1) return 'Must be a positive whole number.';
-      if (num > 3600) return 'Max is 3600 seconds.';
-      return undefined;
-    },
-  });
-  assertNotCancelled(thresholdRaw);
-
-  const soundEnabled = await p.confirm({
-    message: 'Enable sound alerts?',
-    initialValue: config.preferences.sound_enabled,
-  });
-  assertNotCancelled(soundEnabled);
-
-  let soundVolume = config.preferences.sound_volume;
-  if (soundEnabled) {
-    const volRaw = await p.text({
-      message: 'Sound volume (1–10)',
-      placeholder: String(config.preferences.sound_volume),
-      defaultValue: String(config.preferences.sound_volume),
-      validate(value) {
-        const num = Number((value ?? '').trim());
-        if (isNaN(num) || !Number.isInteger(num) || num < 1 || num > 10) return 'Must be 1–10.';
-        return undefined;
-      },
+  while (true) {
+    const setting = await p.select({
+      message: 'Which setting to update?',
+      options: [
+        { value: 'threshold', label: `Idle threshold — currently ${pc.cyan(String(prefs.idle_threshold_seconds) + 's')}` },
+        { value: 'sound', label: `Sound alerts — currently ${pc.cyan(prefs.sound_enabled ? `On (volume ${prefs.sound_volume})` : 'Off')}` },
+        { value: 'style', label: `Message style — currently ${pc.cyan(prefs.message_style)}` },
+        { value: 'done', label: changed ? pc.green('Save & exit') : 'Back (no changes)' },
+      ],
     });
-    assertNotCancelled(volRaw);
-    soundVolume = Number(volRaw);
+    assertNotCancelled(setting);
+
+    if (setting === 'done') break;
+
+    if (setting === 'threshold') {
+      const val = await p.text({
+        message: 'Idle threshold (seconds)',
+        placeholder: String(prefs.idle_threshold_seconds),
+        defaultValue: String(prefs.idle_threshold_seconds),
+        validate(value) {
+          const num = Number((value ?? '').trim());
+          if (isNaN(num) || !Number.isInteger(num) || num < 1) return 'Must be a positive whole number.';
+          if (num > 3600) return 'Max is 3600 seconds.';
+          return undefined;
+        },
+      });
+      assertNotCancelled(val);
+      prefs.idle_threshold_seconds = Number(val);
+      changed = true;
+      p.log.success(`Threshold set to ${pc.cyan(String(val) + 's')}`);
+    }
+
+    if (setting === 'sound') {
+      const enabled = await p.confirm({
+        message: 'Enable sound alerts?',
+        initialValue: prefs.sound_enabled,
+      });
+      assertNotCancelled(enabled);
+      prefs.sound_enabled = enabled as boolean;
+
+      if (enabled) {
+        const vol = await p.text({
+          message: 'Sound volume (1–10)',
+          placeholder: String(prefs.sound_volume),
+          defaultValue: String(prefs.sound_volume),
+          validate(value) {
+            const num = Number((value ?? '').trim());
+            if (isNaN(num) || !Number.isInteger(num) || num < 1 || num > 10) return 'Must be 1–10.';
+            return undefined;
+          },
+        });
+        assertNotCancelled(vol);
+        prefs.sound_volume = Number(vol);
+      }
+      changed = true;
+      p.log.success(`Sound ${prefs.sound_enabled ? `on (volume ${prefs.sound_volume})` : 'off'}`);
+    }
+
+    if (setting === 'style') {
+      const style = await p.select({
+        message: 'Message style?',
+        options: [
+          { value: 'minimal' as const, label: 'Minimal — "Claude needs input"' },
+          { value: 'detailed' as const, label: 'Detailed — "Claude needs input | Dir: ~/project | Reason: end_turn"' },
+        ],
+        initialValue: prefs.message_style,
+      });
+      assertNotCancelled(style);
+      prefs.message_style = style as MessageStyle;
+      changed = true;
+      p.log.success(`Style set to ${pc.cyan(prefs.message_style)}`);
+    }
   }
 
-  const messageStyle = await p.select({
-    message: 'Message style?',
-    options: [
-      { value: 'minimal' as const, label: 'Minimal — "Claude needs input"' },
-      { value: 'detailed' as const, label: 'Detailed — "Claude needs input | Dir: ~/project | Reason: end_turn"' },
-    ],
-    initialValue: config.preferences.message_style,
-  });
-  assertNotCancelled(messageStyle);
+  if (!changed) return config;
 
-  const newPreferences: Preferences = {
-    idle_threshold_seconds: Number(thresholdRaw),
-    sound_enabled: soundEnabled as boolean,
-    sound_volume: soundVolume,
-    message_style: messageStyle as MessageStyle,
-  };
+  const newPreferences: Preferences = prefs;
 
   // Regenerate hook script with new preferences
   const platform = detectPlatform();
@@ -117,7 +144,6 @@ async function updatePreferences(config: Config): Promise<void> {
   });
   spinner.stop('Hook script updated.');
 
-  // Update config
   const updatedConfig: Config = {
     ...config,
     preferences: newPreferences,
@@ -126,7 +152,8 @@ async function updatePreferences(config: Config): Promise<void> {
   };
   await writeConfig(updatedConfig);
 
-  p.log.success('Preferences updated.');
+  p.log.success('Preferences saved.');
+  return updatedConfig;
 }
 
 // ── 7.3 Change Slack Channel / Webhook ──────────────────
@@ -134,21 +161,21 @@ async function updatePreferences(config: Config): Promise<void> {
 async function changeSlack(config: Config): Promise<void> {
   p.log.step(pc.bold('Change Slack Channel / Webhook'));
 
-  const channel = await p.text({
-    message: 'New Slack channel?',
-    placeholder: config.slack.channel,
-    defaultValue: config.slack.channel,
+  const defaultChannel = config.slack.channel.replace(/^#/, '');
+  const channelRaw = await p.text({
+    message: 'New Slack channel? (without #)',
+    placeholder: defaultChannel,
+    defaultValue: defaultChannel,
     validate(value) {
       const trimmed = (value ?? '').trim();
       if (!trimmed) return 'Channel name is required.';
-      if (!trimmed.startsWith('#')) return 'Must start with #.';
-      if (trimmed.length < 2) return 'Must have at least one character after #.';
       return undefined;
     },
   });
-  assertNotCancelled(channel);
+  assertNotCancelled(channelRaw);
+  const channel = `#${(channelRaw as string).trim().replace(/^#/, '')}`;
 
-  const webhookUrl = await runSlackConnection((channel as string).trim());
+  const webhookUrl = await runSlackConnection(channel);
 
   // Regenerate hook script with new webhook
   const platform = detectPlatform();
@@ -166,7 +193,7 @@ async function changeSlack(config: Config): Promise<void> {
     ...config,
     slack: {
       ...config.slack,
-      channel: (channel as string).trim(),
+      channel,
       webhook_url: webhookUrl,
     },
     updated_at: new Date().toISOString(),
@@ -291,7 +318,7 @@ async function uninstall(config: Config): Promise<boolean> {
 // ── Main Menu ───────────────────────────────────────────
 
 export async function runManagementMenu(): Promise<void> {
-  const config = await readConfig();
+  let config = await readConfig();
   if (!config) {
     p.log.error('Config file is missing or corrupted. Run setup again.');
     return;
@@ -315,18 +342,21 @@ export async function runManagementMenu(): Promise<void> {
     assertNotCancelled(action);
 
     switch (action) {
-      case 'preferences':
-        await updatePreferences(config);
-        // Re-read config to reflect changes in summary
-        const updatedConfig = await readConfig();
-        if (updatedConfig) displayConfigSummary(updatedConfig);
+      case 'preferences': {
+        config = await updatePreferences(config);
+        displayConfigSummary(config);
         break;
+      }
 
-      case 'slack':
+      case 'slack': {
         await changeSlack(config);
         const slackUpdated = await readConfig();
-        if (slackUpdated) displayConfigSummary(slackUpdated);
+        if (slackUpdated) {
+          config = slackUpdated;
+          displayConfigSummary(config);
+        }
         break;
+      }
 
       case 'test':
         await testAlert(config);
