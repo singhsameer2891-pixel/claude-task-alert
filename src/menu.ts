@@ -10,7 +10,6 @@ import {
   writeConfig,
   getConfigDir,
 } from './config.js';
-import { runSlackConnection } from './slack.js';
 import {
   getClaudeSettingsPath,
   readClaudeSettings,
@@ -29,17 +28,16 @@ function assertNotCancelled(value: unknown): asserts value is Exclude<typeof val
 // ── 7.1 Config Summary Screen ────────────────────────────
 
 function displayConfigSummary(config: Config): void {
-  const { slack, preferences, hook } = config;
+  const { ntfy, preferences, hook } = config;
 
   p.note(
     `${pc.bold('Current Configuration')}\n\n` +
-    `  Channel:    ${pc.cyan(slack.channel)}\n` +
-    `  Webhook:    ${pc.dim(slack.webhook_url.slice(0, 45))}...\n` +
-    `  Threshold:  ${preferences.idle_threshold_seconds} seconds\n` +
-    `  Sound:      ${preferences.sound_enabled ? `On (volume ${preferences.sound_volume})` : 'Off'}\n` +
-    `  Style:      ${preferences.message_style}\n` +
-    `  Hook:       ${hook.registered ? pc.green('Active') : pc.red('Missing')}\n` +
-    `  Installed:  ${config.installed_at.split('T')[0]}`,
+    `  ntfy topic:  ${pc.cyan(ntfy.topic)}\n` +
+    `  Threshold:   ${preferences.idle_threshold_seconds} seconds\n` +
+    `  Sound:       ${preferences.sound_enabled ? `On (volume ${preferences.sound_volume})` : 'Off'}\n` +
+    `  Style:       ${preferences.message_style}\n` +
+    `  Hook:        ${hook.registered ? pc.green('Active') : pc.red('Missing')}\n` +
+    `  Installed:   ${config.installed_at.split('T')[0]}`,
     'claude-ping',
   );
 }
@@ -138,7 +136,7 @@ async function updatePreferences(config: Config): Promise<Config> {
   const spinner = p.spinner();
   spinner.start('Updating hook script...');
   const hookPath = await writeHookScript({
-    webhookUrl: config.slack.webhook_url,
+    ntfyTopic: config.ntfy.topic,
     preferences: newPreferences,
     platform,
   });
@@ -156,33 +154,32 @@ async function updatePreferences(config: Config): Promise<Config> {
   return updatedConfig;
 }
 
-// ── 7.3 Change Slack Channel / Webhook ──────────────────
+// ── 7.3 Change ntfy Topic ──────────────────────────────
 
-async function changeSlack(config: Config): Promise<void> {
-  p.log.step(pc.bold('Change Slack Channel / Webhook'));
+async function changeNtfyTopic(config: Config): Promise<void> {
+  p.log.step(pc.bold('Change ntfy topic'));
 
-  const defaultChannel = config.slack.channel.replace(/^#/, '');
-  const channelRaw = await p.text({
-    message: 'New Slack channel? (without #)',
-    placeholder: defaultChannel,
-    defaultValue: defaultChannel,
+  const topicRaw = await p.text({
+    message: 'New ntfy topic name?',
+    placeholder: config.ntfy.topic,
+    defaultValue: config.ntfy.topic,
     validate(value) {
       const trimmed = (value ?? '').trim();
-      if (!trimmed) return 'Channel name is required.';
+      if (!trimmed) return 'Topic name is required.';
+      if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) return 'Only letters, numbers, hyphens, and underscores.';
+      if (trimmed.length < 3) return 'Must be at least 3 characters.';
       return undefined;
     },
   });
-  assertNotCancelled(channelRaw);
-  const channel = `#${(channelRaw as string).trim().replace(/^#/, '')}`;
+  assertNotCancelled(topicRaw);
+  const ntfyTopic = (topicRaw as string).trim();
 
-  const webhookUrl = await runSlackConnection(channel);
-
-  // Regenerate hook script with new webhook
+  // Regenerate hook script with new topic
   const platform = detectPlatform();
   const spinner = p.spinner();
   spinner.start('Updating hook script...');
   const hookPath = await writeHookScript({
-    webhookUrl,
+    ntfyTopic,
     preferences: config.preferences,
     platform,
   });
@@ -191,17 +188,13 @@ async function changeSlack(config: Config): Promise<void> {
   // Update config
   const updatedConfig: Config = {
     ...config,
-    slack: {
-      ...config.slack,
-      channel,
-      webhook_url: webhookUrl,
-    },
+    ntfy: { topic: ntfyTopic },
     updated_at: new Date().toISOString(),
     hook: { registered: true, hook_path: hookPath },
   };
   await writeConfig(updatedConfig);
 
-  p.log.success(`Slack updated — alerts now go to ${pc.cyan((channel as string).trim())}`);
+  p.log.success(`ntfy topic changed to ${pc.cyan(ntfyTopic)}`);
 }
 
 // ── 7.4 Test Alert ──────────────────────────────────────
@@ -211,23 +204,25 @@ async function testAlert(config: Config): Promise<void> {
   spinner.start('Sending test alert...');
 
   try {
-    const response = await fetch(config.slack.webhook_url, {
+    const response = await fetch(`https://ntfy.sh/${config.ntfy.topic}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text: `:test_tube: *Test alert from claude-ping*\nChannel: ${config.slack.channel} | Style: ${config.preferences.message_style}`,
-      }),
+      headers: {
+        'Priority': 'urgent',
+        'Title': 'claude-ping',
+        'Tags': 'bell',
+      },
+      body: `Test alert from claude-ping! Style: ${config.preferences.message_style}`,
     });
 
     if (response.ok) {
-      spinner.stop('Test alert sent — check your Slack channel!');
+      spinner.stop('Test alert sent — check your phone!');
     } else {
-      spinner.stop(pc.red('Webhook returned an error.'));
-      p.log.error(`HTTP ${response.status}. Your webhook may have been revoked. Run "Change Slack" to reconnect.`);
+      spinner.stop(pc.red('ntfy returned an error.'));
+      p.log.error(`HTTP ${response.status}. Check your topic name and try again.`);
     }
   } catch {
-    spinner.stop(pc.red('Could not reach Slack.'));
-    p.log.error('Network error. Check your connection and webhook URL.');
+    spinner.stop(pc.red('Could not reach ntfy.sh.'));
+    p.log.error('Network error. Check your connection.');
   }
 
   // Play sound if enabled
@@ -333,7 +328,7 @@ export async function runManagementMenu(): Promise<void> {
       message: 'What would you like to do?',
       options: [
         { value: 'preferences', label: 'Update preferences (threshold, sound, style)' },
-        { value: 'slack', label: 'Change Slack channel / webhook' },
+        { value: 'ntfy', label: 'Change ntfy topic' },
         { value: 'test', label: 'Test alert (send a test notification)' },
         { value: 'uninstall', label: pc.red('Uninstall (remove hook + config)') },
         { value: 'exit', label: 'Exit' },
@@ -348,11 +343,11 @@ export async function runManagementMenu(): Promise<void> {
         break;
       }
 
-      case 'slack': {
-        await changeSlack(config);
-        const slackUpdated = await readConfig();
-        if (slackUpdated) {
-          config = slackUpdated;
+      case 'ntfy': {
+        await changeNtfyTopic(config);
+        const ntfyUpdated = await readConfig();
+        if (ntfyUpdated) {
+          config = ntfyUpdated;
           displayConfigSummary(config);
         }
         break;

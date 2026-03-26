@@ -1,10 +1,15 @@
+// ── slack.ts — COMMENTED OUT (v2.0.0) ──────────────────────
+// Slack integration has been replaced by ntfy.sh.
+// This file is kept for potential future re-enablement.
+// All Slack functionality is now inactive.
+
+/*
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import open from 'open';
 
 // ── 4.1 Manifest Generation ──────────────────────────────
 
-/** Generate Slack app manifest JSON per PRD §5 */
 export function generateManifest(): string {
   const manifest = {
     display_information: {
@@ -35,7 +40,6 @@ export function generateManifest(): string {
 
 // ── 4.2 Slack App Creation URL ───────────────────────────
 
-/** Build the Slack app creation URL with pre-filled manifest */
 export function buildSlackAppUrl(): string {
   const manifest = generateManifest();
   const encoded = encodeURIComponent(manifest);
@@ -44,7 +48,6 @@ export function buildSlackAppUrl(): string {
 
 // ── 4.3 Browser Open ─────────────────────────────────────
 
-/** Open Slack app creation page in browser; print URL on failure */
 async function openBrowser(url: string): Promise<void> {
   try {
     await open(url);
@@ -59,7 +62,6 @@ async function openBrowser(url: string): Promise<void> {
 
 const WEBHOOK_PATTERN = /^https:\/\/hooks\.slack\.com\/services\/.+\/.+\/.+$/;
 
-/** Validate webhook URL format */
 function validateWebhookUrl(value: string | undefined): string | undefined {
   const trimmed = (value ?? '').trim();
   if (!trimmed) return 'Webhook URL is required.';
@@ -77,7 +79,6 @@ interface WebhookTestResult {
   status?: number;
 }
 
-/** Send a test message to the webhook with detailed error info */
 async function testWebhook(webhookUrl: string, channel: string): Promise<WebhookTestResult> {
   try {
     const response = await fetch(webhookUrl, {
@@ -90,7 +91,6 @@ async function testWebhook(webhookUrl: string, channel: string): Promise<Webhook
 
     if (response.ok) return { ok: true };
 
-    // 8.3 — Classify HTTP errors
     const status = response.status;
     if (status === 403 || status === 401) {
       return { ok: false, error: 'auth', status };
@@ -109,7 +109,6 @@ async function testWebhook(webhookUrl: string, channel: string): Promise<Webhook
 
 // ── 4.4 + 4.5 + 4.6 + 4.7 Full Handoff Flow ────────────
 
-/** Check if user cancelled a prompt */
 function assertNotCancelled(value: unknown): asserts value is Exclude<typeof value, symbol> {
   if (p.isCancel(value)) {
     p.cancel('Setup cancelled.');
@@ -117,15 +116,12 @@ function assertNotCancelled(value: unknown): asserts value is Exclude<typeof val
   }
 }
 
-/** Run the full Slack connection flow: browser handoff → webhook paste → validation → test */
 export async function runSlackConnection(channel: string): Promise<string> {
   const url = buildSlackAppUrl();
 
-  // ── 4.3 Open browser ──
   p.log.step(pc.bold('Let\'s connect to Slack'));
   await openBrowser(url);
 
-  // ── 4.4 Step-by-step instructions ──
   p.note(
     `${pc.bold('Complete these steps in your browser:')}\n\n` +
     `  1. Click ${pc.cyan('"Create App"')} on the Slack page\n` +
@@ -139,7 +135,6 @@ export async function runSlackConnection(channel: string): Promise<string> {
     'Slack Setup',
   );
 
-  // ── 4.5 + 4.7 Webhook paste with re-prompt loop ──
   while (true) {
     const webhookRaw = await p.text({
       message: 'Paste your Slack webhook URL:',
@@ -150,7 +145,6 @@ export async function runSlackConnection(channel: string): Promise<string> {
 
     const webhookUrl = (webhookRaw as string).trim();
 
-    // ── 4.6 Test POST ──
     const spinner = p.spinner();
     spinner.start('Testing webhook...');
 
@@ -163,7 +157,6 @@ export async function runSlackConnection(channel: string): Promise<string> {
 
     spinner.stop(pc.red('Webhook test failed.'));
 
-    // 8.3 — Targeted error messages based on failure type
     switch (result.error) {
       case 'auth':
         p.log.error(
@@ -210,3 +203,4 @@ export async function runSlackConnection(channel: string): Promise<string> {
     }
   }
 }
+*/

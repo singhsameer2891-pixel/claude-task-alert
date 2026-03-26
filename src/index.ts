@@ -7,7 +7,6 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectState, readConfig, checkConfigDirAccess } from './config.js';
 import { runFirstRunSetup } from './setup.js';
-import { runSlackConnection } from './slack.js';
 import { checkClaudeCodeInstalled, runIntegration } from './integration.js';
 import { runManagementMenu } from './menu.js';
 import { showBanner } from './banner.js';
@@ -17,9 +16,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 function getVersion(): string {
   try {
     const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
-    return pkg.version || '1.0.0';
+    return pkg.version || '2.0.0';
   } catch {
-    return '1.0.0';
+    return '2.0.0';
   }
 }
 
@@ -61,19 +60,15 @@ async function main() {
   switch (state) {
     case 'fresh': {
       const result = await runFirstRunSetup();
-      p.log.success(`Preferences collected for ${pc.cyan(result.channel)}`);
+      p.log.success(`ntfy topic: ${pc.cyan(result.ntfyTopic)}`);
       p.log.info(
         `Threshold: ${result.preferences.idle_threshold_seconds}s | ` +
         `Sound: ${result.preferences.sound_enabled ? 'On' : 'Off'} | ` +
         `Style: ${result.preferences.message_style}`,
       );
 
-      const webhookUrl = await runSlackConnection(result.channel);
-      p.log.success(`Slack connected: ${pc.cyan(webhookUrl.slice(0, 50))}...`);
-
       await runIntegration({
-        channel: result.channel,
-        webhookUrl,
+        ntfyTopic: result.ntfyTopic,
         preferences: result.preferences,
       });
 
@@ -92,8 +87,7 @@ async function main() {
       if (config) {
         p.log.warn('Config found but hook is missing. Re-registering...');
         await runIntegration({
-          channel: config.slack.channel,
-          webhookUrl: config.slack.webhook_url,
+          ntfyTopic: config.ntfy.topic,
           preferences: config.preferences,
         });
         p.outro(pc.green('Hook re-registered!'));

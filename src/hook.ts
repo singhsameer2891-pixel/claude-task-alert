@@ -53,7 +53,7 @@ function getIdleDetectionSnippet(platform: Platform): string | null {
         'IDLE_MS=$(powershell.exe -NoProfile -Command "Add-Type @\'',
         'using System; using System.Runtime.InteropServices;',
         'public class IdleTime {',
-        '  [DllImport(\"user32.dll\")] static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);',
+        '  [DllImport(\\"user32.dll\\")] static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);',
         '  [StructLayout(LayoutKind.Sequential)] struct LASTINPUTINFO { public uint cbSize; public uint dwTime; }',
         '  public static int Get() {',
         '    var info = new LASTINPUTINFO { cbSize = (uint)Marshal.SizeOf(typeof(LASTINPUTINFO)) };',
@@ -137,7 +137,6 @@ function getStopReasonMapping(style: 'minimal' | 'detailed'): string {
       '  permission_denied) MSG="Claude needs permission" ;;',
       '  *)                MSG="Claude stopped ($STOP_REASON)" ;;',
       'esac',
-      'EMOJI=":robot_face:"',
     ].join('\n');
   }
 
@@ -145,35 +144,27 @@ function getStopReasonMapping(style: 'minimal' | 'detailed'): string {
     'case "$STOP_REASON" in',
     '  end_turn)',
     '    MSG="Claude is waiting for your input"',
-    '    EMOJI=":speech_balloon:" ;;',
+    '    DETAIL="Dir: $CWD | Reason: end_turn" ;;',
     '  max_tokens)',
     '    MSG="Claude hit token limit — needs you to continue"',
-    '    EMOJI=":warning:" ;;',
+    '    DETAIL="Dir: $CWD | Reason: max_tokens" ;;',
     '  tool_error)',
     '    MSG="Claude hit an error — needs your attention"',
-    '    EMOJI=":x:" ;;',
+    '    DETAIL="Dir: $CWD | Reason: tool_error" ;;',
     '  permission_denied)',
     '    MSG="Claude needs permission to proceed"',
-    '    EMOJI=":lock:" ;;',
+    '    DETAIL="Dir: $CWD | Reason: permission_denied" ;;',
     '  *)',
     '    MSG="Claude session stopped (reason: $STOP_REASON)"',
-    '    EMOJI=":robot_face:" ;;',
+    '    DETAIL="Dir: $CWD | Reason: $STOP_REASON" ;;',
     'esac',
   ].join('\n');
 }
 
-function getSlackPayload(style: 'minimal' | 'detailed'): string {
-  if (style === 'minimal') {
-    return `PAYLOAD="{\\"text\\":\\"$EMOJI $MSG\\"}"`;
-  }
-
-  return `PAYLOAD="{\\"text\\":\\"$EMOJI *$MSG*\\nDir: $CWD\\nReason: $STOP_REASON\\"}"`;
-}
-
 // ── 5.4 Hook Script Template ─────────────────────────────
 
-interface HookScriptOptions {
-  webhookUrl: string;
+export interface HookScriptOptions {
+  ntfyTopic: string;
   preferences: Preferences;
   platform: Platform;
 }
@@ -214,9 +205,9 @@ export function generateHookScript(options: HookScriptOptions): string {
   ].join('\n') + '\n';
 }
 
-/** Generate the worker.sh — idle polling, sound, Slack POST */
+/** Generate the worker.sh — idle polling, sound, ntfy POST */
 export function generateWorkerScript(options: HookScriptOptions): string {
-  const { webhookUrl, preferences, platform } = options;
+  const { ntfyTopic, preferences, platform } = options;
   const thresholdMs = preferences.idle_threshold_seconds * 1000;
 
   const idleSnippet = getIdleDetectionSnippet(platform);
@@ -279,16 +270,32 @@ export function generateWorkerScript(options: HookScriptOptions): string {
     );
   }
 
-  // ── Slack POST ──
-  lines.push(
-    '',
-    '# Send Slack notification',
-    getSlackPayload(preferences.message_style),
-    '',
-    `curl -s -o /dev/null -X POST -H 'Content-type: application/json' \\`,
-    `  --data "$PAYLOAD" \\`,
-    `  '${webhookUrl}'`,
-  );
+  // ── ntfy POST ──
+  if (preferences.message_style === 'detailed') {
+    lines.push(
+      '',
+      '# Send ntfy notification',
+      `curl -s -o /dev/null \\`,
+      `  -H "Priority: urgent" \\`,
+      `  -H "Title: claude-ping" \\`,
+      `  -H "Tags: bell" \\`,
+      `  -H "Actions: view, Open Terminal, shortcuts://run-shortcut?name=OpenTerminal" \\`,
+      `  -d "$MSG — $DETAIL" \\`,
+      `  'https://ntfy.sh/${ntfyTopic}'`,
+    );
+  } else {
+    lines.push(
+      '',
+      '# Send ntfy notification',
+      `curl -s -o /dev/null \\`,
+      `  -H "Priority: urgent" \\`,
+      `  -H "Title: claude-ping" \\`,
+      `  -H "Tags: bell" \\`,
+      `  -H "Actions: view, Open Terminal, shortcuts://run-shortcut?name=OpenTerminal" \\`,
+      `  -d "$MSG" \\`,
+      `  'https://ntfy.sh/${ntfyTopic}'`,
+    );
+  }
 
   return lines.join('\n') + '\n';
 }
@@ -370,7 +377,7 @@ export function checkPlatformCapabilities(platform: Platform, soundEnabled: bool
   }
 
   if (soundEnabled && !soundAlert) {
-    notes.push('Sound alerts not available on this system. Slack alerts will still work.');
+    notes.push('Sound alerts not available on this system. ntfy alerts will still work.');
   }
 
   if (platform === 'linux' || platform === 'wsl') {

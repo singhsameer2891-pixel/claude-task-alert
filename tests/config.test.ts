@@ -17,18 +17,16 @@ describe('config', () => {
     it('returns parsed config when file exists', async () => {
       const { readConfig } = await import('../src/config.js');
       const mockConfig = {
-        version: '1.0.0',
+        version: '2.0.0',
         installed_at: '2026-03-26T00:00:00.000Z',
         updated_at: '2026-03-26T00:00:00.000Z',
-        slack: {
-          webhook_url: 'https://hooks.slack.com/services/T/B/x',
-          channel: '#test',
-          app_name: 'claude-ping',
+        ntfy: {
+          topic: 'claude-ping-abc123',
         },
         preferences: {
           idle_threshold_seconds: 30,
           sound_enabled: true,
-          sound_volume: 5,
+          sound_volume: 10,
           message_style: 'detailed',
         },
         hook: { registered: true, hook_path: path.join(CONFIG_DIR, 'hook.sh') },
@@ -57,18 +55,16 @@ describe('config', () => {
       vi.mocked(fs.writeFile).mockResolvedValue(undefined);
 
       const config = {
-        version: '1.0.0',
+        version: '2.0.0',
         installed_at: '2026-03-26T00:00:00.000Z',
         updated_at: '2026-03-26T00:00:00.000Z',
-        slack: {
-          webhook_url: 'https://hooks.slack.com/services/T/B/x',
-          channel: '#test',
-          app_name: 'claude-ping',
+        ntfy: {
+          topic: 'claude-ping-abc123',
         },
         preferences: {
           idle_threshold_seconds: 30,
           sound_enabled: true,
-          sound_volume: 5,
+          sound_volume: 10,
           message_style: 'detailed' as const,
         },
         hook: { registered: true, hook_path: path.join(CONFIG_DIR, 'hook.sh') },
@@ -117,18 +113,16 @@ describe('config', () => {
       const { detectState } = await import('../src/config.js');
       const hookPath = path.join(CONFIG_DIR, 'hook.sh');
       const mockConfig = {
-        version: '1.0.0',
+        version: '2.0.0',
         installed_at: '2026-03-26T00:00:00.000Z',
         updated_at: '2026-03-26T00:00:00.000Z',
-        slack: {
-          webhook_url: 'https://hooks.slack.com/services/T/B/x',
-          channel: '#test',
-          app_name: 'claude-ping',
+        ntfy: {
+          topic: 'claude-ping-abc123',
         },
         preferences: {
           idle_threshold_seconds: 30,
           sound_enabled: true,
-          sound_volume: 5,
+          sound_volume: 10,
           message_style: 'detailed',
         },
         hook: { registered: true, hook_path: hookPath },
@@ -145,18 +139,16 @@ describe('config', () => {
       const { detectState } = await import('../src/config.js');
       const hookPath = path.join(CONFIG_DIR, 'hook.sh');
       const mockConfig = {
-        version: '1.0.0',
+        version: '2.0.0',
         installed_at: '2026-03-26T00:00:00.000Z',
         updated_at: '2026-03-26T00:00:00.000Z',
-        slack: {
-          webhook_url: 'https://hooks.slack.com/services/T/B/x',
-          channel: '#test',
-          app_name: 'claude-ping',
+        ntfy: {
+          topic: 'claude-ping-abc123',
         },
         preferences: {
           idle_threshold_seconds: 30,
           sound_enabled: true,
-          sound_volume: 5,
+          sound_volume: 10,
           message_style: 'detailed',
         },
         hook: { registered: true, hook_path: hookPath },

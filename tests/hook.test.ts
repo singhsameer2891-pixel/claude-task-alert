@@ -17,11 +17,11 @@ describe('hook', () => {
   describe('generateHookScript', () => {
     it('generates thin launcher with perl double-fork', () => {
       const script = generateHookScript({
-        webhookUrl: 'https://hooks.slack.com/services/T123/B456/abc',
+        ntfyTopic: 'claude-ping-test123',
         preferences: {
           idle_threshold_seconds: 30,
           sound_enabled: true,
-          sound_volume: 5,
+          sound_volume: 10,
           message_style: 'detailed',
         },
         platform: 'darwin',
@@ -40,11 +40,11 @@ describe('hook', () => {
   describe('generateWorkerScript', () => {
     it('generates valid bash script with all sections for darwin', () => {
       const script = generateWorkerScript({
-        webhookUrl: 'https://hooks.slack.com/services/T123/B456/abc',
+        ntfyTopic: 'claude-ping-test123',
         preferences: {
           idle_threshold_seconds: 30,
           sound_enabled: true,
-          sound_volume: 5,
+          sound_volume: 10,
           message_style: 'detailed',
         },
         platform: 'darwin',
@@ -55,12 +55,12 @@ describe('hook', () => {
       expect(script).toContain('ioreg');
       expect(script).toContain('THRESHOLD_MS=30000');
       expect(script).toContain('afplay');
-      expect(script).toContain('hooks.slack.com/services/T123/B456/abc');
+      expect(script).toContain('ntfy.sh/claude-ping-test123');
     });
 
     it('generates script without sound when disabled', () => {
       const script = generateWorkerScript({
-        webhookUrl: 'https://hooks.slack.com/services/T123/B456/abc',
+        ntfyTopic: 'claude-ping-test123',
         preferences: {
           idle_threshold_seconds: 60,
           sound_enabled: false,
@@ -77,7 +77,7 @@ describe('hook', () => {
 
     it('generates minimal message style correctly', () => {
       const script = generateWorkerScript({
-        webhookUrl: 'https://hooks.slack.com/services/T/B/x',
+        ntfyTopic: 'claude-ping-test123',
         preferences: {
           idle_threshold_seconds: 30,
           sound_enabled: false,
@@ -87,12 +87,13 @@ describe('hook', () => {
         platform: 'darwin',
       });
 
-      expect(script).toContain('EMOJI=":robot_face:"');
+      expect(script).toContain('MSG="Claude stopped ($STOP_REASON)"');
+      expect(script).toContain('ntfy.sh/claude-ping-test123');
     });
 
-    it('generates detailed message style with per-reason emojis', () => {
+    it('generates detailed message style with DETAIL field', () => {
       const script = generateWorkerScript({
-        webhookUrl: 'https://hooks.slack.com/services/T/B/x',
+        ntfyTopic: 'claude-ping-test123',
         preferences: {
           idle_threshold_seconds: 30,
           sound_enabled: false,
@@ -102,14 +103,13 @@ describe('hook', () => {
         platform: 'darwin',
       });
 
-      expect(script).toContain(':speech_balloon:');
-      expect(script).toContain(':warning:');
-      expect(script).toContain(':lock:');
+      expect(script).toContain('DETAIL=');
+      expect(script).toContain('$MSG — $DETAIL');
     });
 
     it('uses paplay/aplay on Linux', () => {
       const script = generateWorkerScript({
-        webhookUrl: 'https://hooks.slack.com/services/T/B/x',
+        ntfyTopic: 'claude-ping-test123',
         preferences: {
           idle_threshold_seconds: 30,
           sound_enabled: true,
@@ -128,7 +128,7 @@ describe('hook', () => {
 
     it('uses powershell on win32', () => {
       const script = generateWorkerScript({
-        webhookUrl: 'https://hooks.slack.com/services/T/B/x',
+        ntfyTopic: 'claude-ping-test123',
         preferences: {
           idle_threshold_seconds: 30,
           sound_enabled: true,
@@ -145,7 +145,7 @@ describe('hook', () => {
 
     it('calculates correct threshold in milliseconds', () => {
       const script = generateWorkerScript({
-        webhookUrl: 'https://hooks.slack.com/services/T/B/x',
+        ntfyTopic: 'claude-ping-test123',
         preferences: {
           idle_threshold_seconds: 120,
           sound_enabled: false,
@@ -160,7 +160,7 @@ describe('hook', () => {
 
     it('uses xprintidle on WSL', () => {
       const script = generateWorkerScript({
-        webhookUrl: 'https://hooks.slack.com/services/T/B/x',
+        ntfyTopic: 'claude-ping-test123',
         preferences: {
           idle_threshold_seconds: 30,
           sound_enabled: false,
@@ -171,6 +171,24 @@ describe('hook', () => {
       });
 
       expect(script).toContain('xprintidle');
+    });
+
+    it('includes ntfy headers in POST', () => {
+      const script = generateWorkerScript({
+        ntfyTopic: 'my-topic',
+        preferences: {
+          idle_threshold_seconds: 30,
+          sound_enabled: false,
+          sound_volume: 5,
+          message_style: 'minimal',
+        },
+        platform: 'darwin',
+      });
+
+      expect(script).toContain('Priority: urgent');
+      expect(script).toContain('Title: claude-ping');
+      expect(script).toContain('Tags: bell');
+      expect(script).toContain('ntfy.sh/my-topic');
     });
   });
 

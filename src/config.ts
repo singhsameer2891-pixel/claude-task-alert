@@ -6,10 +6,15 @@ import os from 'node:os';
 
 export type MessageStyle = 'minimal' | 'detailed';
 
-export interface SlackConfig {
-  webhook_url: string;
-  channel: string;
-  app_name: string;
+// Slack config — currently unused, kept for future re-enablement
+// export interface SlackConfig {
+//   webhook_url: string;
+//   channel: string;
+//   app_name: string;
+// }
+
+export interface NtfyConfig {
+  topic: string;
 }
 
 export interface Preferences {
@@ -28,7 +33,7 @@ export interface Config {
   version: string;
   installed_at: string;
   updated_at: string;
-  slack: SlackConfig;
+  ntfy: NtfyConfig;
   preferences: Preferences;
   hook: HookConfig;
 }
@@ -72,7 +77,6 @@ export async function writeConfig(config: Config): Promise<void> {
 export async function checkConfigDirAccess(): Promise<boolean> {
   try {
     await fs.mkdir(CONFIG_DIR, { recursive: true });
-    // Test actual write access with a temp file
     const testFile = path.join(CONFIG_DIR, '.write-test');
     await fs.writeFile(testFile, '', 'utf-8');
     await fs.unlink(testFile);

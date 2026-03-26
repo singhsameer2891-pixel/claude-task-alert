@@ -100,25 +100,24 @@ describe('integration', () => {
   });
 
   describe('writeFinalConfig', () => {
-    it('writes complete config with all fields', async () => {
+    it('writes complete config with ntfy fields', async () => {
       const { writeFinalConfig } = await import('../src/integration.js');
       vi.mocked(fs.mkdir).mockResolvedValue(undefined);
       vi.mocked(fs.writeFile).mockResolvedValue(undefined);
 
       const config = await writeFinalConfig({
-        channel: '#test',
-        webhookUrl: 'https://hooks.slack.com/services/T/B/x',
+        ntfyTopic: 'claude-ping-abc123',
         preferences: {
           idle_threshold_seconds: 30,
           sound_enabled: true,
-          sound_volume: 5,
+          sound_volume: 10,
           message_style: 'detailed',
         },
         hookPath: '/home/user/.claude-ping/hook.sh',
       });
 
-      expect(config.version).toBe('1.0.0');
-      expect(config.slack.channel).toBe('#test');
+      expect(config.version).toBe('2.0.0');
+      expect(config.ntfy.topic).toBe('claude-ping-abc123');
       expect(config.hook.registered).toBe(true);
       expect(config.installed_at).toBeTruthy();
     });

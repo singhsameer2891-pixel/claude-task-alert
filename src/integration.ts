@@ -6,7 +6,6 @@ import pc from 'picocolors';
 import {
   type Config,
   type Preferences,
-  type SlackConfig,
   writeConfig,
   getConfigDir,
 } from './config.js';
@@ -149,8 +148,7 @@ export async function registerHook(hookPath: string): Promise<RegisterResult> {
 // ── 6.7 Write Final Config ────────────────────────────────
 
 interface FinalConfigOptions {
-  channel: string;
-  webhookUrl: string;
+  ntfyTopic: string;
   preferences: Preferences;
   hookPath: string;
 }
@@ -160,13 +158,11 @@ export async function writeFinalConfig(options: FinalConfigOptions): Promise<Con
   const now = new Date().toISOString();
 
   const config: Config = {
-    version: '1.0.0',
+    version: '2.0.0',
     installed_at: now,
     updated_at: now,
-    slack: {
-      webhook_url: options.webhookUrl,
-      channel: options.channel,
-      app_name: 'claude-ping',
+    ntfy: {
+      topic: options.ntfyTopic,
     },
     preferences: options.preferences,
     hook: {
@@ -181,19 +177,18 @@ export async function writeFinalConfig(options: FinalConfigOptions): Promise<Con
 
 // ── 6.8 Success Screen ────────────────────────────────────
 
-/** Display the PRD §10.4 success screen */
+/** Display the success screen */
 export function displaySuccessScreen(config: Config): void {
-  const { slack, preferences } = config;
+  const { ntfy, preferences } = config;
 
   p.note(
     `${pc.bold(pc.green('All set!'))}\n\n` +
-    `  Channel:    ${pc.cyan(slack.channel)}\n` +
-    `  Threshold:  ${preferences.idle_threshold_seconds} seconds idle\n` +
-    `  Sound:      ${preferences.sound_enabled ? 'Enabled' : 'Disabled'}\n` +
-    `  Style:      ${preferences.message_style === 'detailed' ? 'Detailed' : 'Minimal'}\n\n` +
-    `  A test message was sent to your channel.\n` +
-    `  You'll get Slack alerts whenever Claude\n` +
-    `  stops and needs your attention.\n\n` +
+    `  ntfy topic:  ${pc.cyan(ntfy.topic)}\n` +
+    `  Threshold:   ${preferences.idle_threshold_seconds} seconds idle\n` +
+    `  Sound:       ${preferences.sound_enabled ? 'Enabled' : 'Disabled'}\n` +
+    `  Style:       ${preferences.message_style === 'detailed' ? 'Detailed' : 'Minimal'}\n\n` +
+    `  You'll get mobile notifications whenever\n` +
+    `  Claude stops and needs your attention.\n\n` +
     `  Run ${pc.cyan('npx claude-ping')} again to\n` +
     `  update settings or uninstall.`,
     'claude-ping',
@@ -203,14 +198,13 @@ export function displaySuccessScreen(config: Config): void {
 // ── Full Integration Flow ─────────────────────────────────
 
 interface IntegrationOptions {
-  channel: string;
-  webhookUrl: string;
+  ntfyTopic: string;
   preferences: Preferences;
 }
 
 /** Run the complete integration: hook script → Claude Code registration → config → success */
 export async function runIntegration(options: IntegrationOptions): Promise<void> {
-  const { channel, webhookUrl, preferences } = options;
+  const { ntfyTopic, preferences } = options;
   const platform = detectPlatform();
 
   // Check platform capabilities and display notes
@@ -222,7 +216,7 @@ export async function runIntegration(options: IntegrationOptions): Promise<void>
   // Write hook.sh
   const spinner = p.spinner();
   spinner.start('Writing hook script...');
-  const hookPath = await writeHookScript({ webhookUrl, preferences, platform });
+  const hookPath = await writeHookScript({ ntfyTopic, preferences, platform });
   spinner.stop(`Hook script written to ${pc.cyan(hookPath)}`);
 
   // Register in Claude Code settings.json
@@ -243,7 +237,7 @@ export async function runIntegration(options: IntegrationOptions): Promise<void>
   }
 
   // Write final config.json
-  const config = await writeFinalConfig({ channel, webhookUrl, preferences, hookPath });
+  const config = await writeFinalConfig({ ntfyTopic, preferences, hookPath });
 
   // Display success screen
   displaySuccessScreen(config);
