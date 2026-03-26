@@ -109,17 +109,17 @@
 
 ---
 
-## GROUP 8: Error Handling & Edge Cases
+## GROUP 8: Error Handling & Edge Cases ✅
 **Depends on:** GROUP 7
 **Summary:** Implement all error scenarios from PRD §11 and edge case detection.
 
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
-| 8.1 | Claude Code not installed detection (no settings.json path resolvable) | ⏳ | |
-| 8.2 | No write access to `~/.claude-task-alert/` — permission error messaging | ⏳ | |
-| 8.3 | Slack workspace restriction detection (webhook test returns auth error) | ⏳ | |
-| 8.4 | Ctrl+C / cancel handling at every prompt — clean exit, no partial state | ⏳ | |
-| 8.5 | Audit all flows for uncaught exceptions — wrap CLI entry in top-level try/catch | ⏳ | |
+| 8.1 | Claude Code not installed detection (no settings.json path resolvable) | ✅ | `checkClaudeCodeInstalled()` in integration.ts, early check in index.ts |
+| 8.2 | No write access to `~/.claude-task-alert/` — permission error messaging | ✅ | `checkConfigDirAccess()` in config.ts, checked before setup/re-register |
+| 8.3 | Slack workspace restriction detection (webhook test returns auth error) | ✅ | `WebhookTestResult` with error classification: auth/not_found/server/network |
+| 8.4 | Ctrl+C / cancel handling at every prompt — clean exit, no partial state | ✅ | All prompts covered via `assertNotCancelled()` + global SIGINT handler in index.ts |
+| 8.5 | Audit all flows for uncaught exceptions — wrap CLI entry in top-level try/catch | ✅ | Categorized error handler: EACCES/EPERM, ENOSPC, network, unknown + DEBUG mode |
 
 ---
 

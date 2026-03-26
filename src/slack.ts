@@ -71,8 +71,14 @@ function validateWebhookUrl(value: string | undefined): string | undefined {
 
 // ── 4.6 Test Webhook POST ────────────────────────────────
 
-/** Send a test message to the webhook, returns true on success */
-async function testWebhook(webhookUrl: string, channel: string): Promise<boolean> {
+interface WebhookTestResult {
+  ok: boolean;
+  error?: 'network' | 'auth' | 'not_found' | 'server' | 'unknown';
+  status?: number;
+}
+
+/** Send a test message to the webhook with detailed error info */
+async function testWebhook(webhookUrl: string, channel: string): Promise<WebhookTestResult> {
   try {
     const response = await fetch(webhookUrl, {
       method: 'POST',
@@ -81,9 +87,23 @@ async function testWebhook(webhookUrl: string, channel: string): Promise<boolean
         text: `✅ *Claude Task Alert connected!*\nAlerts will be posted to ${channel}.`,
       }),
     });
-    return response.ok;
+
+    if (response.ok) return { ok: true };
+
+    // 8.3 — Classify HTTP errors
+    const status = response.status;
+    if (status === 403 || status === 401) {
+      return { ok: false, error: 'auth', status };
+    }
+    if (status === 404) {
+      return { ok: false, error: 'not_found', status };
+    }
+    if (status >= 500) {
+      return { ok: false, error: 'server', status };
+    }
+    return { ok: false, error: 'unknown', status };
   } catch {
-    return false;
+    return { ok: false, error: 'network' };
   }
 }
 
@@ -134,20 +154,49 @@ export async function runSlackConnection(channel: string): Promise<string> {
     const spinner = p.spinner();
     spinner.start('Testing webhook...');
 
-    const ok = await testWebhook(webhookUrl, channel);
+    const result = await testWebhook(webhookUrl, channel);
 
-    if (ok) {
+    if (result.ok) {
       spinner.stop('Webhook verified — test message sent to Slack!');
       return webhookUrl;
     }
 
     spinner.stop(pc.red('Webhook test failed.'));
-    p.log.error(
-      'Could not reach that webhook. Check that:\n' +
-      '  • The URL is copied correctly (full URL, no trailing spaces)\n' +
-      '  • The app is installed to your workspace\n' +
-      '  • The webhook is active\n',
-    );
+
+    // 8.3 — Targeted error messages based on failure type
+    switch (result.error) {
+      case 'auth':
+        p.log.error(
+          `Slack returned ${result.status} (authorization error).\n` +
+          '  Your workspace may restrict app installations.\n' +
+          '  • Ask a workspace admin to approve the app\n' +
+          '  • Or try a different workspace',
+        );
+        break;
+      case 'not_found':
+        p.log.error(
+          'Webhook URL not found (404). The webhook may have been revoked.\n' +
+          '  • Go back to the Slack app page and create a new webhook',
+        );
+        break;
+      case 'server':
+        p.log.error(
+          `Slack returned a server error (${result.status}). Try again in a minute.`,
+        );
+        break;
+      case 'network':
+        p.log.error(
+          'Could not connect to Slack. Check your internet connection.',
+        );
+        break;
+      default:
+        p.log.error(
+          'Could not reach that webhook. Check that:\n' +
+          '  • The URL is copied correctly (full URL, no trailing spaces)\n' +
+          '  • The app is installed to your workspace\n' +
+          '  • The webhook is active',
+        );
+    }
 
     const retry = await p.confirm({
       message: 'Try a different webhook URL?',

@@ -66,6 +66,22 @@ export async function writeConfig(config: Config): Promise<void> {
   await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2) + '\n', 'utf-8');
 }
 
+// ── 8.2 Write Access Check ────────────────────────────
+
+/** Check if we can write to the config directory (create it or write a temp file) */
+export async function checkConfigDirAccess(): Promise<boolean> {
+  try {
+    await fs.mkdir(CONFIG_DIR, { recursive: true });
+    // Test actual write access with a temp file
+    const testFile = path.join(CONFIG_DIR, '.write-test');
+    await fs.writeFile(testFile, '', 'utf-8');
+    await fs.unlink(testFile);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ── State Detection ────────────────────────────────────
 
 export async function detectState(): Promise<AppState> {

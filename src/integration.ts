@@ -31,6 +31,32 @@ export function getClaudeSettingsPath(): string {
   return path.join(os.homedir(), '.claude', 'settings.json');
 }
 
+// ── 8.1 Claude Code Installation Check ───────────────────
+
+interface ClaudeCodeCheck {
+  installed: boolean;
+  message: string;
+}
+
+/** Check if Claude Code appears to be installed (checks for ~/.claude dir) */
+export async function checkClaudeCodeInstalled(): Promise<ClaudeCodeCheck> {
+  const settingsPath = getClaudeSettingsPath();
+  const claudeDir = path.dirname(settingsPath);
+
+  try {
+    await fs.access(claudeDir);
+    return { installed: true, message: '' };
+  } catch {
+    return {
+      installed: false,
+      message:
+        "Claude Code doesn't appear to be installed.\n" +
+        '  The hook needs Claude Code to work.\n' +
+        '  Install it first: https://claude.ai/code',
+    };
+  }
+}
+
 // ── 6.2 Read Settings ─────────────────────────────────────
 
 interface ClaudeSettings {
@@ -201,30 +227,6 @@ export async function runIntegration(options: IntegrationOptions): Promise<void>
 
   // Register in Claude Code settings.json
   spinner.start('Registering hook in Claude Code...');
-
-  const settingsPath = getClaudeSettingsPath();
-  let settingsExist: boolean;
-  try {
-    await fs.access(settingsPath);
-    settingsExist = true;
-  } catch {
-    settingsExist = false;
-  }
-
-  if (!settingsExist) {
-    // Check if Claude Code dir exists at all
-    const claudeDir = path.dirname(settingsPath);
-    try {
-      await fs.access(claudeDir);
-    } catch {
-      spinner.stop(pc.red('Claude Code not found.'));
-      p.log.error(
-        "Claude Code doesn't seem to be installed.\n" +
-        `  Install it first: ${pc.cyan('https://claude.ai/code')}`,
-      );
-      process.exit(1);
-    }
-  }
 
   const result = await registerHook(hookPath);
 
