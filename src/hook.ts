@@ -78,9 +78,29 @@ function getSoundSnippet(platform: Platform, volume: number): string | null {
 
   switch (platform) {
     case 'darwin': {
-      // afplay volume: 0.0–1.0
-      const afVol = volumePct.toFixed(1);
-      return `afplay /System/Library/Sounds/Glass.aiff -v ${afVol} &`;
+      // Pause all media (YouTube/Spotify/Music) via media key, max vol, alarm, restore, resume
+      const alarmPath = path.join(os.homedir(), '.claude-task-alert', 'alarm.wav');
+      const mediaKeyScript = [
+        'MEDIA_KEY_SCRIPT=\'',
+        'import Cocoa',
+        'func tap(key: UInt32, down: Bool) {',
+        '  let flags: UInt64 = down ? 0xa00 : 0xb00',
+        '  let d = Int((key << 16) | UInt32(flags))',
+        '  if let e = NSEvent.otherEvent(with: .systemDefined, location: .zero, modifierFlags: [], timestamp: 0, windowNumber: 0, context: nil, subtype: 8, data1: d, data2: -1), let cg = e.cgEvent { cg.post(tap: .cghidEventTap) }',
+        '}',
+        'tap(key: 16, down: true); tap(key: 16, down: false)',
+        "'",
+      ].join('\n');
+      return [
+        'PREV_VOL=$(osascript -e "output volume of (get volume settings)")',
+        mediaKeyScript,
+        'swift -e "$MEDIA_KEY_SCRIPT" 2>/dev/null',
+        'sleep 0.3',
+        'osascript -e "set volume output volume 100"',
+        `afplay '${alarmPath}'`,
+        'osascript -e "set volume output volume $PREV_VOL"',
+        'swift -e "$MEDIA_KEY_SCRIPT" 2>/dev/null',
+      ].join('\n');
     }
 
     case 'linux':
@@ -189,20 +209,33 @@ export function generateHookScript(options: HookScriptOptions): string {
   ];
 
   // ── 5.2 Idle detection block (with 5.6 graceful degradation) ──
+  // The hook must return quickly (timeout ~10s in Claude Code settings).
+  // Strategy: background a subshell that polls idle time, then exit immediately.
   if (idleSnippet) {
     lines.push(
       '',
-      '# Idle detection',
-      idleSnippet,
-      `THRESHOLD_MS=${thresholdMs}`,
+      '# Background the alert logic so the hook returns immediately',
+      '(',
       '',
-      'if [ -n "$IDLE_MS" ] && [ "$IDLE_MS" -lt "$THRESHOLD_MS" ] 2>/dev/null; then',
-      '  # User is active — skip alert',
-      '  exit 0',
-      'fi',
+      '# Idle detection — wait for user to go idle, then alert',
+      `THRESHOLD_MS=${thresholdMs}`,
+      'MAX_WAIT=300  # max 5 minutes of polling',
+      'ELAPSED=0',
+      '',
+      'while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do',
+      `  ${idleSnippet.split('\n').join('\n  ')}`,
+      '  if [ -n "$IDLE_MS" ] && [ "$IDLE_MS" -ge "$THRESHOLD_MS" ] 2>/dev/null; then',
+      '    break',
+      '  fi',
+      '  sleep 5',
+      '  ELAPSED=$((ELAPSED + 5))',
+      'done',
     );
   } else {
     lines.push(
+      '',
+      '# Background the alert logic so the hook returns immediately',
+      '(',
       '',
       '# Idle detection not available on this platform — always alert',
     );
@@ -234,6 +267,8 @@ export function generateHookScript(options: HookScriptOptions): string {
     `  --data "$PAYLOAD" \\`,
     `  '${webhookUrl}'`,
     '',
+    ') &  # end backgrounded subshell',
+    '',
     'exit 0',
   );
 
@@ -242,12 +277,53 @@ export function generateHookScript(options: HookScriptOptions): string {
 
 // ── 5.5 Write Hook Script ─────────────────────────────────
 
+/** Generate alarm.wav — sharp alternating two-tone (880Hz/1320Hz) for 3 seconds */
+async function generateAlarmWav(filePath: string): Promise<void> {
+  const sampleRate = 44100;
+  const duration = 3;
+  const numSamples = sampleRate * duration;
+  const dataSize = numSamples * 2; // 16-bit mono
+
+  // WAV header (44 bytes)
+  const header = Buffer.alloc(44);
+  header.write('RIFF', 0);
+  header.writeUInt32LE(36 + dataSize, 4);
+  header.write('WAVE', 8);
+  header.write('fmt ', 12);
+  header.writeUInt32LE(16, 16);       // chunk size
+  header.writeUInt16LE(1, 20);        // PCM
+  header.writeUInt16LE(1, 22);        // mono
+  header.writeUInt32LE(sampleRate, 24);
+  header.writeUInt32LE(sampleRate * 2, 28); // byte rate
+  header.writeUInt16LE(2, 32);        // block align
+  header.writeUInt16LE(16, 34);       // bits per sample
+  header.write('data', 36);
+  header.writeUInt32LE(dataSize, 40);
+
+  // Audio data — alternating 880Hz / 1320Hz every 0.15s
+  const data = Buffer.alloc(dataSize);
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const freq = Math.floor(t / 0.15) % 2 === 0 ? 880 : 1320;
+    const sample = Math.round(32767 * Math.sin(2 * Math.PI * freq * t));
+    data.writeInt16LE(sample, i * 2);
+  }
+
+  await fs.writeFile(filePath, Buffer.concat([header, data]));
+}
+
 /** Write hook.sh to ~/.claude-task-alert/hook.sh and make it executable */
 export async function writeHookScript(options: HookScriptOptions): Promise<string> {
   const configDir = getConfigDir();
   const hookPath = path.join(configDir, 'hook.sh');
 
   await fs.mkdir(configDir, { recursive: true });
+
+  // Generate alarm sound for macOS
+  if (options.platform === 'darwin' && options.preferences.sound_enabled) {
+    await generateAlarmWav(path.join(configDir, 'alarm.wav'));
+  }
+
   await fs.writeFile(hookPath, generateHookScript(options), { encoding: 'utf-8', mode: 0o755 });
 
   return hookPath;
