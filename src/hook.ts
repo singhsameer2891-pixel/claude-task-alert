@@ -167,7 +167,7 @@ function getSlackPayload(style: 'minimal' | 'detailed'): string {
     return `PAYLOAD="{\\"text\\":\\"$EMOJI $MSG\\"}"`;
   }
 
-  return `PAYLOAD="{\\"text\\":\\"$EMOJI *$MSG*\\\\nDir: \`$CWD\`\\\\nReason: \\\\\`$STOP_REASON\\\\\`\\"}"`;
+  return `PAYLOAD="{\\"text\\":\\"$EMOJI *$MSG*\\nDir: $CWD\\nReason: $STOP_REASON\\"}"`;
 }
 
 // ── 5.4 Hook Script Template ─────────────────────────────
