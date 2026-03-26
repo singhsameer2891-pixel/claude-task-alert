@@ -8,7 +8,7 @@ import open from 'open';
 export function generateManifest(): string {
   const manifest = {
     display_information: {
-      name: 'Claude Task Alert',
+      name: 'claude-ping',
       description: 'Get notified when Claude Code needs your attention',
       background_color: '#D97757',
     },
@@ -84,7 +84,7 @@ async function testWebhook(webhookUrl: string, channel: string): Promise<Webhook
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        text: `✅ *Claude Task Alert connected!*\nAlerts will be posted to ${channel}.`,
+        text: `✅ *claude-ping connected!*\nAlerts will be posted to ${channel}.`,
       }),
     });
 

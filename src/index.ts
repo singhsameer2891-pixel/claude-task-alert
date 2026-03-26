@@ -2,11 +2,26 @@
 
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { detectState, readConfig, checkConfigDirAccess } from './config.js';
 import { runFirstRunSetup } from './setup.js';
 import { runSlackConnection } from './slack.js';
 import { checkClaudeCodeInstalled, runIntegration } from './integration.js';
 import { runManagementMenu } from './menu.js';
+import { showBanner } from './banner.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+function getVersion(): string {
+  try {
+    const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
+    return pkg.version || '1.0.0';
+  } catch {
+    return '1.0.0';
+  }
+}
 
 // ── 8.4 Global SIGINT handler — clean exit on Ctrl+C outside prompts ──
 process.on('SIGINT', () => {
@@ -15,7 +30,8 @@ process.on('SIGINT', () => {
 });
 
 async function main() {
-  p.intro(pc.bgCyan(pc.black(' Claude Task Alert ')));
+  console.clear();
+  showBanner(getVersion());
 
   const state = await detectState();
 
@@ -35,7 +51,7 @@ async function main() {
     if (!accessOk) {
       p.log.error(
         `Cannot write to config directory.\n` +
-        `  Check permissions on ${pc.cyan('~/.claude-task-alert/')}`,
+        `  Check permissions on ${pc.cyan('~/.claude-ping/')}`,
       );
       p.outro('Setup aborted.');
       process.exit(1);
@@ -72,7 +88,6 @@ async function main() {
     }
 
     case 'hook_missing': {
-      // Re-register hook: read existing config, run integration again
       const config = await readConfig();
       if (config) {
         p.log.warn('Config found but hook is missing. Re-registering...');

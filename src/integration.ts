@@ -166,7 +166,7 @@ export async function writeFinalConfig(options: FinalConfigOptions): Promise<Con
     slack: {
       webhook_url: options.webhookUrl,
       channel: options.channel,
-      app_name: 'Claude Task Alert',
+      app_name: 'claude-ping',
     },
     preferences: options.preferences,
     hook: {
@@ -194,9 +194,9 @@ export function displaySuccessScreen(config: Config): void {
     `  A test message was sent to your channel.\n` +
     `  You'll get Slack alerts whenever Claude\n` +
     `  stops and needs your attention.\n\n` +
-    `  Run ${pc.cyan('npx claude-task-alert')} again to\n` +
+    `  Run ${pc.cyan('npx claude-ping')} again to\n` +
     `  update settings or uninstall.`,
-    'Claude Task Alert',
+    'claude-ping',
   );
 }
 

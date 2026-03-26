@@ -34,7 +34,7 @@ describe('integration', () => {
 
     it('returns true when matching hook is found', async () => {
       const { isHookRegistered } = await import('../src/integration.js');
-      const hookPath = '/home/user/.claude-task-alert/hook.sh';
+      const hookPath = '/home/user/.claude-ping/hook.sh';
       const settings = {
         hooks: {
           Stop: [{ hooks: [{ type: 'command', command: hookPath }] }],
@@ -51,7 +51,7 @@ describe('integration', () => {
       vi.mocked(fs.mkdir).mockResolvedValue(undefined);
       vi.mocked(fs.writeFile).mockResolvedValue(undefined);
 
-      const hookPath = '/home/user/.claude-task-alert/hook.sh';
+      const hookPath = '/home/user/.claude-ping/hook.sh';
       const result = await registerHook(hookPath);
 
       expect(result.action).toBe('created_new');
@@ -74,7 +74,7 @@ describe('integration', () => {
       vi.mocked(fs.mkdir).mockResolvedValue(undefined);
       vi.mocked(fs.writeFile).mockResolvedValue(undefined);
 
-      const hookPath = '/home/user/.claude-task-alert/hook.sh';
+      const hookPath = '/home/user/.claude-ping/hook.sh';
       const result = await registerHook(hookPath);
 
       expect(result.action).toBe('registered');
@@ -85,7 +85,7 @@ describe('integration', () => {
 
     it('skips registration when hook already exists', async () => {
       const { registerHook } = await import('../src/integration.js');
-      const hookPath = '/home/user/.claude-task-alert/hook.sh';
+      const hookPath = '/home/user/.claude-ping/hook.sh';
       const existingSettings = {
         hooks: {
           Stop: [{ hooks: [{ type: 'command', command: hookPath }] }],
@@ -114,7 +114,7 @@ describe('integration', () => {
           sound_volume: 5,
           message_style: 'detailed',
         },
-        hookPath: '/home/user/.claude-task-alert/hook.sh',
+        hookPath: '/home/user/.claude-ping/hook.sh',
       });
 
       expect(config.version).toBe('1.0.0');

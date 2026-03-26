@@ -37,7 +37,7 @@ export type AppState = 'fresh' | 'configured' | 'hook_missing';
 
 // ── Paths ──────────────────────────────────────────────
 
-const CONFIG_DIR = path.join(os.homedir(), '.claude-task-alert');
+const CONFIG_DIR = path.join(os.homedir(), '.claude-ping');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 
 export function getConfigDir(): string {

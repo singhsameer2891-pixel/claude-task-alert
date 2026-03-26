@@ -47,7 +47,7 @@ export interface SetupResult {
 export async function runFirstRunSetup(): Promise<SetupResult> {
   // ── 3.1 Welcome screen ──
   p.note(
-    `${pc.bold('Claude Task Alert')}\n` +
+    `${pc.bold('claude-ping')}\n` +
     `Get Slack notifications when Claude\n` +
     `needs your attention.\n\n` +
     `Let's get you set up. (~2 minutes)`,

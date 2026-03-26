@@ -1,11 +1,11 @@
 {
-  "name": "claude-task-alert",
+  "name": "claude-ping",
   "version": "1.2.0",
   "description": "Get Slack notifications when Claude Code stops and needs your attention — zero-config Slack app setup via interactive CLI",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "claude-task-alert": "dist/index.js"
+    "claude-ping": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -32,12 +32,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/singhsameer2891-pixel/claude-task-alert.git"
+    "url": "git+https://github.com/singhsameer2891-pixel/claude-ping.git"
   },
   "bugs": {
-    "url": "https://github.com/singhsameer2891-pixel/claude-task-alert/issues"
+    "url": "https://github.com/singhsameer2891-pixel/claude-ping/issues"
   },
-  "homepage": "https://github.com/singhsameer2891-pixel/claude-task-alert#readme",
+  "homepage": "https://github.com/singhsameer2891-pixel/claude-ping#readme",
   "files": [
     "dist",
     "LICENSE",

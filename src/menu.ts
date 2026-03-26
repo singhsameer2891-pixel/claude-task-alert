@@ -40,7 +40,7 @@ function displayConfigSummary(config: Config): void {
     `  Style:      ${preferences.message_style}\n` +
     `  Hook:       ${hook.registered ? pc.green('Active') : pc.red('Missing')}\n` +
     `  Installed:  ${config.installed_at.split('T')[0]}`,
-    'Claude Task Alert',
+    'claude-ping',
   );
 }
 
@@ -188,7 +188,7 @@ async function testAlert(config: Config): Promise<void> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        text: `:test_tube: *Test alert from Claude Task Alert*\nChannel: ${config.slack.channel} | Style: ${config.preferences.message_style}`,
+        text: `:test_tube: *Test alert from claude-ping*\nChannel: ${config.slack.channel} | Style: ${config.preferences.message_style}`,
       }),
     });
 
@@ -274,7 +274,7 @@ async function uninstall(config: Config): Promise<boolean> {
     spinner.stop(pc.yellow('Could not update Claude Code settings (may already be clean).'));
   }
 
-  // Delete ~/.claude-task-alert/
+  // Delete ~/.claude-ping/
   spinner.start('Deleting config directory...');
   try {
     const configDir = getConfigDir();
@@ -284,7 +284,7 @@ async function uninstall(config: Config): Promise<boolean> {
     spinner.stop(pc.yellow('Could not delete config directory.'));
   }
 
-  p.log.success('Claude Task Alert has been uninstalled.');
+  p.log.success('claude-ping has been uninstalled.');
   return true;
 }
 

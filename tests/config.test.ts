@@ -5,7 +5,7 @@ import os from 'node:os';
 
 vi.mock('node:fs/promises');
 
-const CONFIG_DIR = path.join(os.homedir(), '.claude-task-alert');
+const CONFIG_DIR = path.join(os.homedir(), '.claude-ping');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 
 describe('config', () => {
@@ -23,7 +23,7 @@ describe('config', () => {
         slack: {
           webhook_url: 'https://hooks.slack.com/services/T/B/x',
           channel: '#test',
-          app_name: 'Claude Task Alert',
+          app_name: 'claude-ping',
         },
         preferences: {
           idle_threshold_seconds: 30,
@@ -63,7 +63,7 @@ describe('config', () => {
         slack: {
           webhook_url: 'https://hooks.slack.com/services/T/B/x',
           channel: '#test',
-          app_name: 'Claude Task Alert',
+          app_name: 'claude-ping',
         },
         preferences: {
           idle_threshold_seconds: 30,
@@ -123,7 +123,7 @@ describe('config', () => {
         slack: {
           webhook_url: 'https://hooks.slack.com/services/T/B/x',
           channel: '#test',
-          app_name: 'Claude Task Alert',
+          app_name: 'claude-ping',
         },
         preferences: {
           idle_threshold_seconds: 30,
@@ -151,7 +151,7 @@ describe('config', () => {
         slack: {
           webhook_url: 'https://hooks.slack.com/services/T/B/x',
           channel: '#test',
-          app_name: 'Claude Task Alert',
+          app_name: 'claude-ping',
         },
         preferences: {
           idle_threshold_seconds: 30,

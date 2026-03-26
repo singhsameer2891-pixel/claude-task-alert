@@ -79,7 +79,7 @@ function getSoundSnippet(platform: Platform, volume: number): string | null {
   switch (platform) {
     case 'darwin': {
       // Pause all media (YouTube/Spotify/Music) via media key, max vol, alarm, restore, resume
-      const alarmPath = path.join(os.homedir(), '.claude-task-alert', 'alarm.wav');
+      const alarmPath = path.join(os.homedir(), '.claude-ping', 'alarm.wav');
       const mediaKeyScript = [
         'MEDIA_KEY_SCRIPT=\'',
         'import Cocoa',
@@ -180,19 +180,19 @@ interface HookScriptOptions {
 
 /** Generate the thin hook.sh — reads stdin, writes temp file, launches worker via double-fork */
 export function generateHookScript(options: HookScriptOptions): string {
-  const configDir = path.join(os.homedir(), '.claude-task-alert');
+  const configDir = path.join(os.homedir(), '.claude-ping');
   const workerPath = path.join(configDir, 'worker.sh');
 
   return [
     '#!/usr/bin/env bash',
-    '# Claude Task Alert — stop hook (thin launcher)',
+    '# claude-ping — stop hook (thin launcher)',
     '# Reads stdin, writes to temp file, launches worker as orphaned process, exits instantly.',
     '',
     'INPUT=$(cat)',
     'STOP_REASON=$(echo "$INPUT" | grep -o \'"stop_reason":"[^"]*"\' | head -1 | cut -d\'"\' -f4)',
     'CWD=$(echo "$INPUT" | grep -o \'"cwd":"[^"]*"\' | head -1 | cut -d\'"\' -f4)',
     '',
-    'TMPFILE=$(mktemp /tmp/claude-task-alert.XXXXXX)',
+    'TMPFILE=$(mktemp /tmp/claude-ping.XXXXXX)',
     'echo "${STOP_REASON:-unknown}|${CWD:-unknown}" > "$TMPFILE"',
     '',
     '# Double-fork via perl to create a fully orphaned process',
@@ -226,7 +226,7 @@ export function generateWorkerScript(options: HookScriptOptions): string {
 
   const lines: string[] = [
     '#!/usr/bin/env bash',
-    '# Claude Task Alert — background worker',
+    '# claude-ping — background worker',
     '# Launched by hook.sh as a fully detached process',
     '',
     'TMPFILE="$1"',
@@ -330,7 +330,7 @@ async function generateAlarmWav(filePath: string): Promise<void> {
   await fs.writeFile(filePath, Buffer.concat([header, data]));
 }
 
-/** Write hook.sh + worker.sh to ~/.claude-task-alert/ and make them executable */
+/** Write hook.sh + worker.sh to ~/.claude-ping/ and make them executable */
 export async function writeHookScript(options: HookScriptOptions): Promise<string> {
   const configDir = getConfigDir();
   const hookPath = path.join(configDir, 'hook.sh');

@@ -7,7 +7,7 @@ describe('slack', () => {
       const raw = generateManifest();
       const manifest = JSON.parse(raw);
 
-      expect(manifest.display_information.name).toBe('Claude Task Alert');
+      expect(manifest.display_information.name).toBe('claude-ping');
       expect(manifest.features.bot_user.display_name).toBe('Claude Alert');
       expect(manifest.oauth_config.scopes.bot).toContain('incoming-webhook');
       expect(manifest.settings.org_deploy_enabled).toBe(false);
@@ -30,7 +30,7 @@ describe('slack', () => {
       expect(manifestJson).not.toBeNull();
 
       const manifest = JSON.parse(manifestJson!);
-      expect(manifest.display_information.name).toBe('Claude Task Alert');
+      expect(manifest.display_information.name).toBe('claude-ping');
     });
   });
 });
