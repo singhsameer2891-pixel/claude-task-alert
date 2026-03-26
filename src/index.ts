@@ -2,9 +2,10 @@
 
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
-import { detectState } from './config.js';
+import { detectState, readConfig } from './config.js';
 import { runFirstRunSetup } from './setup.js';
 import { runSlackConnection } from './slack.js';
+import { runIntegration } from './integration.js';
 
 async function main() {
   p.intro(pc.bgCyan(pc.black(' Claude Task Alert ')));
@@ -24,8 +25,13 @@ async function main() {
       const webhookUrl = await runSlackConnection(result.channel);
       p.log.success(`Slack connected: ${pc.cyan(webhookUrl.slice(0, 50))}...`);
 
-      // Hook registration handled in GROUP 5+6
-      p.outro('Slack connected! Hook setup coming next.');
+      await runIntegration({
+        channel: result.channel,
+        webhookUrl,
+        preferences: result.preferences,
+      });
+
+      p.outro(pc.green('Setup complete!'));
       break;
     }
 
@@ -37,9 +43,20 @@ async function main() {
     }
 
     case 'hook_missing': {
-      // Re-register hook flow (GROUP 6)
-      p.log.warn('Config found but hook is missing. Re-registration coming soon.');
-      p.outro('Done.');
+      // Re-register hook: read existing config, run integration again
+      const config = await readConfig();
+      if (config) {
+        p.log.warn('Config found but hook is missing. Re-registering...');
+        await runIntegration({
+          channel: config.slack.channel,
+          webhookUrl: config.slack.webhook_url,
+          preferences: config.preferences,
+        });
+        p.outro(pc.green('Hook re-registered!'));
+      } else {
+        p.log.error('Config file is corrupted. Please run setup again.');
+        p.outro('Done.');
+      }
       break;
     }
   }

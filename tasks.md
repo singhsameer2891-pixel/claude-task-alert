@@ -77,20 +77,20 @@
 
 ---
 
-## GROUP 6: Claude Code Integration
+## GROUP 6: Claude Code Integration ✅
 **Depends on:** GROUP 5
 **Summary:** Register the hook in Claude Code's settings.json, detect existing hooks, avoid duplicates.
 
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
-| 6.1 | Locate Claude Code settings.json path (platform-aware) | ⏳ | |
-| 6.2 | Read existing settings.json, parse hooks section | ⏳ | |
-| 6.3 | Check if our hook is already registered (by command path match) | ⏳ | |
-| 6.4 | If not registered: add stop hook entry per PRD §8, write back | ⏳ | |
-| 6.5 | If already registered: skip, log "Hook already configured" | ⏳ | |
-| 6.6 | Handle missing settings.json: create with just the hook entry | ⏳ | |
-| 6.7 | Write final config.json with all preferences + webhook + hook status | ⏳ | |
-| 6.8 | Display success screen (PRD §10.4) | ⏳ | |
+| 6.1 | Locate Claude Code settings.json path (platform-aware) | ✅ | `getClaudeSettingsPath()` in src/integration.ts |
+| 6.2 | Read existing settings.json, parse hooks section | ✅ | `readClaudeSettings()` with typed interface |
+| 6.3 | Check if our hook is already registered (by command path match) | ✅ | `isHookRegistered()` checks Stop hooks by command path |
+| 6.4 | If not registered: add stop hook entry per PRD §8, write back | ✅ | `registerHook()` appends to Stop array |
+| 6.5 | If already registered: skip, log "Hook already configured" | ✅ | Returns `already_registered` action |
+| 6.6 | Handle missing settings.json: create with just the hook entry | ✅ | Creates dir + file if missing, checks Claude Code install |
+| 6.7 | Write final config.json with all preferences + webhook + hook status | ✅ | `writeFinalConfig()` builds full Config object |
+| 6.8 | Display success screen (PRD §10.4) | ✅ | `displaySuccessScreen()` per PRD spec |
 
 ---
 
