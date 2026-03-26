@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   generateHookScript,
+  generateWorkerScript,
   checkPlatformCapabilities,
   detectPlatform,
 } from '../src/hook.js';
@@ -14,8 +15,31 @@ describe('hook', () => {
   });
 
   describe('generateHookScript', () => {
-    it('generates valid bash script with all sections for darwin', () => {
+    it('generates thin launcher with perl double-fork', () => {
       const script = generateHookScript({
+        webhookUrl: 'https://hooks.slack.com/services/T123/B456/abc',
+        preferences: {
+          idle_threshold_seconds: 30,
+          sound_enabled: true,
+          sound_volume: 5,
+          message_style: 'detailed',
+        },
+        platform: 'darwin',
+      });
+
+      expect(script).toContain('#!/usr/bin/env bash');
+      expect(script).toContain('STOP_REASON=');
+      expect(script).toContain('TMPFILE=$(mktemp');
+      expect(script).toContain('perl -e');
+      expect(script).toContain('setsid');
+      expect(script).toContain('worker.sh');
+      expect(script).toContain('exit 0');
+    });
+  });
+
+  describe('generateWorkerScript', () => {
+    it('generates valid bash script with all sections for darwin', () => {
+      const script = generateWorkerScript({
         webhookUrl: 'https://hooks.slack.com/services/T123/B456/abc',
         preferences: {
           idle_threshold_seconds: 30,
@@ -32,11 +56,10 @@ describe('hook', () => {
       expect(script).toContain('THRESHOLD_MS=30000');
       expect(script).toContain('afplay');
       expect(script).toContain('hooks.slack.com/services/T123/B456/abc');
-      expect(script).toContain('exit 0');
     });
 
     it('generates script without sound when disabled', () => {
-      const script = generateHookScript({
+      const script = generateWorkerScript({
         webhookUrl: 'https://hooks.slack.com/services/T123/B456/abc',
         preferences: {
           idle_threshold_seconds: 60,
@@ -53,7 +76,7 @@ describe('hook', () => {
     });
 
     it('generates minimal message style correctly', () => {
-      const script = generateHookScript({
+      const script = generateWorkerScript({
         webhookUrl: 'https://hooks.slack.com/services/T/B/x',
         preferences: {
           idle_threshold_seconds: 30,
@@ -68,7 +91,7 @@ describe('hook', () => {
     });
 
     it('generates detailed message style with per-reason emojis', () => {
-      const script = generateHookScript({
+      const script = generateWorkerScript({
         webhookUrl: 'https://hooks.slack.com/services/T/B/x',
         preferences: {
           idle_threshold_seconds: 30,
@@ -85,7 +108,7 @@ describe('hook', () => {
     });
 
     it('uses paplay/aplay on Linux', () => {
-      const script = generateHookScript({
+      const script = generateWorkerScript({
         webhookUrl: 'https://hooks.slack.com/services/T/B/x',
         preferences: {
           idle_threshold_seconds: 30,
@@ -104,7 +127,7 @@ describe('hook', () => {
     });
 
     it('uses powershell on win32', () => {
-      const script = generateHookScript({
+      const script = generateWorkerScript({
         webhookUrl: 'https://hooks.slack.com/services/T/B/x',
         preferences: {
           idle_threshold_seconds: 30,
@@ -121,7 +144,7 @@ describe('hook', () => {
     });
 
     it('calculates correct threshold in milliseconds', () => {
-      const script = generateHookScript({
+      const script = generateWorkerScript({
         webhookUrl: 'https://hooks.slack.com/services/T/B/x',
         preferences: {
           idle_threshold_seconds: 120,
@@ -135,9 +158,8 @@ describe('hook', () => {
       expect(script).toContain('THRESHOLD_MS=120000');
     });
 
-    it('skips idle detection section for unsupported platforms gracefully', () => {
-      // WSL uses same idle as linux
-      const script = generateHookScript({
+    it('uses xprintidle on WSL', () => {
+      const script = generateWorkerScript({
         webhookUrl: 'https://hooks.slack.com/services/T/B/x',
         preferences: {
           idle_threshold_seconds: 30,

@@ -1,6 +1,6 @@
 {
   "name": "claude-task-alert",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Get Slack notifications when Claude Code stops and needs your attention — zero-config Slack app setup via interactive CLI",
   "type": "module",
   "main": "dist/index.js",
