@@ -270,32 +270,32 @@ export function generateWorkerScript(options: HookScriptOptions): string {
     );
   }
 
-  // ── ntfy POST ──
-  if (preferences.message_style === 'detailed') {
-    lines.push(
-      '',
-      '# Send ntfy notification',
-      `curl -s -o /dev/null \\`,
-      `  -H "Priority: urgent" \\`,
-      `  -H "Title: claude-ping" \\`,
-      `  -H "Tags: bell" \\`,
-      `  -H "Actions: view, Open Terminal, shortcuts://run-shortcut?name=OpenTerminal" \\`,
-      `  -d "$MSG — $DETAIL" \\`,
-      `  'https://ntfy.sh/${ntfyTopic}'`,
-    );
-  } else {
-    lines.push(
-      '',
-      '# Send ntfy notification',
-      `curl -s -o /dev/null \\`,
-      `  -H "Priority: urgent" \\`,
-      `  -H "Title: claude-ping" \\`,
-      `  -H "Tags: bell" \\`,
-      `  -H "Actions: view, Open Terminal, shortcuts://run-shortcut?name=OpenTerminal" \\`,
-      `  -d "$MSG" \\`,
-      `  'https://ntfy.sh/${ntfyTopic}'`,
-    );
-  }
+  // ── ntfy POST — commented out, sound-only mode ──
+  // if (preferences.message_style === 'detailed') {
+  //   lines.push(
+  //     '',
+  //     '# Send ntfy notification',
+  //     `curl -s -o /dev/null \\`,
+  //     `  -H "Priority: urgent" \\`,
+  //     `  -H "Title: claude-ping" \\`,
+  //     `  -H "Tags: bell" \\`,
+  //     `  -H "Actions: view, Open Terminal, shortcuts://run-shortcut?name=OpenTerminal" \\`,
+  //     `  -d "$MSG — $DETAIL" \\`,
+  //     `  'https://ntfy.sh/${ntfyTopic}'`,
+  //   );
+  // } else {
+  //   lines.push(
+  //     '',
+  //     '# Send ntfy notification',
+  //     `curl -s -o /dev/null \\`,
+  //     `  -H "Priority: urgent" \\`,
+  //     `  -H "Title: claude-ping" \\`,
+  //     `  -H "Tags: bell" \\`,
+  //     `  -H "Actions: view, Open Terminal, shortcuts://run-shortcut?name=OpenTerminal" \\`,
+  //     `  -d "$MSG" \\`,
+  //     `  'https://ntfy.sh/${ntfyTopic}'`,
+  //   );
+  // }
 
   return lines.join('\n') + '\n';
 }

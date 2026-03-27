@@ -179,15 +179,13 @@ export async function writeFinalConfig(options: FinalConfigOptions): Promise<Con
 
 /** Display the success screen */
 export function displaySuccessScreen(config: Config): void {
-  const { ntfy, preferences } = config;
+  const { preferences } = config;
 
   p.note(
     `${pc.bold(pc.green('All set!'))}\n\n` +
-    `  ntfy topic:  ${pc.cyan(ntfy.topic)}\n` +
     `  Threshold:   ${preferences.idle_threshold_seconds} seconds idle\n` +
-    `  Sound:       ${preferences.sound_enabled ? 'Enabled' : 'Disabled'}\n` +
-    `  Style:       ${preferences.message_style === 'detailed' ? 'Detailed' : 'Minimal'}\n\n` +
-    `  You'll get mobile notifications whenever\n` +
+    `  Volume:      ${preferences.sound_volume}/10\n\n` +
+    `  Your laptop will play a sound whenever\n` +
     `  Claude stops and needs your attention.\n\n` +
     `  Run ${pc.cyan('npx claude-ping')} again to\n` +
     `  update settings or uninstall.`,

@@ -60,11 +60,9 @@ async function main() {
   switch (state) {
     case 'fresh': {
       const result = await runFirstRunSetup();
-      p.log.success(`ntfy topic: ${pc.cyan(result.ntfyTopic)}`);
       p.log.info(
         `Threshold: ${result.preferences.idle_threshold_seconds}s | ` +
-        `Sound: ${result.preferences.sound_enabled ? 'On' : 'Off'} | ` +
-        `Style: ${result.preferences.message_style}`,
+        `Volume: ${result.preferences.sound_volume}`,
       );
 
       await runIntegration({

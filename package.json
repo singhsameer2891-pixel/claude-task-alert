@@ -1,7 +1,7 @@
 {
   "name": "claude-ping",
   "version": "2.0.0",
-  "description": "Get mobile notifications (via ntfy.sh) when Claude Code stops and needs your attention — zero-config interactive CLI setup",
+  "description": "Play a sound on your laptop when Claude Code stops and needs your attention — zero-config interactive CLI setup",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
