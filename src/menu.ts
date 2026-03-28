@@ -29,9 +29,11 @@ function assertNotCancelled(value: unknown): asserts value is Exclude<typeof val
 
 function displayConfigSummary(config: Config): void {
   const { preferences, hook } = config;
+  const enabled = config.enabled !== false;
 
   p.note(
     `${pc.bold('Current Configuration')}\n\n` +
+    `  Status:      ${enabled ? pc.green('ON') : pc.yellow('OFF (paused)')}\n` +
     `  Threshold:   ${preferences.idle_threshold_seconds} seconds\n` +
     `  Volume:      ${preferences.sound_volume}/10\n` +
     `  Hook:        ${hook.registered ? pc.green('Active') : pc.red('Missing')}\n` +
@@ -219,7 +221,61 @@ async function testAlert(config: Config): Promise<void> {
   }
 }
 
-// ── 7.5 Uninstall ───────────────────────────────────────
+// ── 7.5 Toggle On/Off ───────────────────────────────────
+
+async function toggleEnabled(config: Config): Promise<Config> {
+  const currentlyEnabled = config.enabled !== false;
+  const spinner = p.spinner();
+
+  if (currentlyEnabled) {
+    // Turn OFF — remove hook from Claude Code settings but keep config
+    spinner.start('Removing hook from Claude Code...');
+    try {
+      const settingsPath = getClaudeSettingsPath();
+      const raw = await fs.readFile(settingsPath, 'utf-8');
+      const settings = JSON.parse(raw);
+
+      if (settings.hooks?.Stop && Array.isArray(settings.hooks.Stop)) {
+        settings.hooks.Stop = settings.hooks.Stop.filter(
+          (entry: { hooks?: Array<{ command?: string }> }) =>
+            !entry.hooks?.some((h) => h.command === config.hook.hook_path),
+        );
+        if (settings.hooks.Stop.length === 0) delete settings.hooks.Stop;
+        if (Object.keys(settings.hooks).length === 0) delete settings.hooks;
+        await fs.writeFile(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
+      }
+      spinner.stop('Hook removed.');
+    } catch {
+      spinner.stop(pc.yellow('Could not update Claude Code settings.'));
+    }
+
+    const updated: Config = {
+      ...config,
+      enabled: false,
+      updated_at: new Date().toISOString(),
+    };
+    await writeConfig(updated);
+    p.log.success('claude-ping is now ' + pc.yellow('OFF') + '. Your settings are saved.');
+    return updated;
+  } else {
+    // Turn ON — re-register hook in Claude Code settings
+    spinner.start('Re-registering hook in Claude Code...');
+    const { registerHook } = await import('./integration.js');
+    await registerHook(config.hook.hook_path);
+    spinner.stop('Hook re-registered.');
+
+    const updated: Config = {
+      ...config,
+      enabled: true,
+      updated_at: new Date().toISOString(),
+    };
+    await writeConfig(updated);
+    p.log.success('claude-ping is now ' + pc.green('ON') + '!');
+    return updated;
+  }
+}
+
+// ── 7.6 Uninstall ───────────────────────────────────────
 
 async function uninstall(config: Config): Promise<boolean> {
   const confirm = await p.confirm({
@@ -292,9 +348,16 @@ export async function runManagementMenu(): Promise<void> {
 
   // Menu loop — return to menu after each action (except exit/uninstall)
   while (true) {
+    const isOn = config.enabled !== false;
     const action = await p.select({
       message: 'What would you like to do?',
       options: [
+        {
+          value: 'toggle',
+          label: isOn
+            ? pc.yellow('Turn OFF (pause alerts, keep settings)')
+            : pc.green('Turn ON'),
+        },
         { value: 'preferences', label: 'Update preferences (threshold, volume)' },
         { value: 'test', label: 'Test sound' },
         { value: 'uninstall', label: pc.red('Uninstall (remove hook + config)') },
@@ -304,6 +367,12 @@ export async function runManagementMenu(): Promise<void> {
     assertNotCancelled(action);
 
     switch (action) {
+      case 'toggle': {
+        config = await toggleEnabled(config);
+        displayConfigSummary(config);
+        break;
+      }
+
       case 'preferences': {
         config = await updatePreferences(config);
         displayConfigSummary(config);

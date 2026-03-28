@@ -158,9 +158,10 @@ export async function writeFinalConfig(options: FinalConfigOptions): Promise<Con
   const now = new Date().toISOString();
 
   const config: Config = {
-    version: '2.0.0',
+    version: '3.0.0',
     installed_at: now,
     updated_at: now,
+    enabled: true,
     ntfy: {
       topic: options.ntfyTopic,
     },

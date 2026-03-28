@@ -33,6 +33,7 @@ export interface Config {
   version: string;
   installed_at: string;
   updated_at: string;
+  enabled: boolean;
   ntfy: NtfyConfig;
   preferences: Preferences;
   hook: HookConfig;
